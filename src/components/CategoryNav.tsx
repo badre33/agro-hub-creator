@@ -22,13 +22,13 @@ export const CategoryNav = ({ activeCategory, onCategoryChange }: CategoryNavPro
   return (
     <nav className="border-b bg-gradient-to-b from-card to-background/50 backdrop-blur-sm sticky top-[57px] sm:top-[65px] md:top-[81px] z-40">
       <div className="py-2 sm:py-3">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex gap-2 px-3 sm:px-4 sm:justify-center">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex gap-2 justify-between sm:justify-center sm:gap-4">
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => onCategoryChange(category.id)}
-                className={`group flex flex-col items-center gap-1 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-105 flex-shrink-0 ${
+                className={`group flex flex-col items-center gap-1 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:scale-105 flex-1 sm:flex-initial ${
                   activeCategory === category.id
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                     : "bg-card hover:bg-accent border border-border/50 hover:border-primary/30"
@@ -43,7 +43,7 @@ export const CategoryNav = ({ activeCategory, onCategoryChange }: CategoryNavPro
                     {category.icon}
                   </div>
                 </div>
-                <span className="font-semibold text-[9px] sm:text-xs">{category.name}</span>
+                <span className="font-semibold text-[9px] sm:text-xs whitespace-nowrap">{category.name}</span>
               </button>
             ))}
           </div>

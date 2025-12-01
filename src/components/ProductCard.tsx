@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import placeholderImg from "@/assets/product-placeholder.jpg";
 
 export interface Product {
   id: number;
@@ -41,6 +42,10 @@ export const ProductCard = ({ product, onQuantityChange }: ProductCardProps) => 
             src={product.image}
             alt={product.name}
             className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = placeholderImg;
+            }}
           />
         </div>
         <div className="p-4">

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Product } from "@/components/ProductCard";
 
 interface CartContextType {
@@ -17,8 +17,26 @@ export interface CartItem extends Product {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const CART_STORAGE_KEY = "broccagri_cart";
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cart, setCart] = useState<Record<number, number>>({});
+  const [cart, setCart] = useState<Record<number, number>>(() => {
+    try {
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+      return savedCart ? JSON.parse(savedCart) : {};
+    } catch (error) {
+      console.error("Error loading cart from localStorage:", error);
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    } catch (error) {
+      console.error("Error saving cart to localStorage:", error);
+    }
+  }, [cart]);
 
   const updateQuantity = (productId: number, quantity: number) => {
     setCart((prev) => ({

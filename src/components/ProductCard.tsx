@@ -37,11 +37,11 @@ export const ProductCard = ({ product, onQuantityChange }: ProductCardProps) => 
   return (
     <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 animate-fade-in hover:scale-[1.02] sm:hover:scale-[1.03] border-2 hover:border-primary/30">
       <CardContent className="p-0">
-        <div className="aspect-square overflow-hidden bg-gradient-to-br from-muted to-muted/50 relative">
+        <div className="aspect-square overflow-hidden bg-gradient-to-br from-muted to-muted/50 relative flex items-center justify-center">
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = placeholderImg;

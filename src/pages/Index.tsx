@@ -16,7 +16,7 @@ const Index = () => {
   }, [activeCategory]);
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-20 sm:pb-24">
       <Header cartCount={cartCount} />
       <CategoryNav
         activeCategory={activeCategory}

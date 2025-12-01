@@ -23,12 +23,12 @@ export const ValidateButton = ({ cartCount }: ValidateButtonProps) => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-4 bg-card/95 backdrop-blur-md border-t shadow-2xl z-40">
+    <div className="fixed bottom-0 left-0 right-0 p-3 sm:p-4 bg-card/95 backdrop-blur-md border-t shadow-2xl z-40 safe-area-bottom">
       <div className="container mx-auto">
         <Button
           onClick={handleValidate}
           size="lg"
-          className="w-full md:w-auto md:min-w-[300px] mx-auto flex items-center justify-center text-lg py-7 rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-105 font-semibold"
+          className="w-full sm:w-auto sm:min-w-[300px] mx-auto flex items-center justify-center text-base sm:text-lg py-6 sm:py-7 rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-105 font-semibold"
         >
           Voir le Panier {cartCount > 0 && `(${cartCount})`}
         </Button>

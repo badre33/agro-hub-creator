@@ -1,46 +1,75 @@
 import { Product } from "@/components/ProductCard";
 
+// Import des images de légumes
+import artichaud from "@/assets/vegetables/artichaud.jpg";
+import artichaudBeldi from "@/assets/vegetables/artichaud-beldi.jpg";
+import asperge from "@/assets/vegetables/asperge.jpg";
+import aubergine from "@/assets/vegetables/aubergine.jpg";
+import cardon from "@/assets/vegetables/cardon.jpg";
+import champignon from "@/assets/vegetables/champignon.jpg";
+import chouFleure from "@/assets/vegetables/chou-fleure.jpg";
+import chouRouge from "@/assets/vegetables/chou-rouge.jpg";
+import chouVert from "@/assets/vegetables/chou-vert.jpg";
+import courgette from "@/assets/vegetables/courgette.jpg";
+import endive from "@/assets/vegetables/endive.jpg";
+import epinard from "@/assets/vegetables/epinard.jpg";
+import epinardPottes from "@/assets/vegetables/epinard-pottes.jpg";
+import feve from "@/assets/vegetables/feve.jpg";
+import haricotVert from "@/assets/vegetables/haricot-vert.jpg";
+import navet from "@/assets/vegetables/navet.jpg";
+import oignonRouge from "@/assets/vegetables/oignon-rouge.jpg";
+import oignonVerte from "@/assets/vegetables/oignon-verte.jpg";
+import petitPois from "@/assets/vegetables/petit-pois.jpg";
+import poivronDouce from "@/assets/vegetables/poivron-douce.jpg";
+import poivronRouge from "@/assets/vegetables/poivron-rouge.jpg";
+import poivronVert from "@/assets/vegetables/poivron-vert.jpg";
+import pommeDeTerreRt from "@/assets/vegetables/pomme-de-terre-pt.jpg";
+import pommeDeTerreRouge from "@/assets/vegetables/pomme-de-terre-rouge.jpg";
+import pommeDeTerre from "@/assets/vegetables/pomme-de-terre-frite.jpg";
+import topinambour from "@/assets/vegetables/topinambour.jpg";
+import betterave from "@/assets/vegetables/betterave.jpg";
+
 export interface ProductWithCategory extends Product {
   category: string;
 }
 
 export const allProducts: ProductWithCategory[] = [
   // Légumes
-  { id: 1, name: "Artichaud", price: 10, image: "https://images.unsplash.com/photo-1617715463127-8890f1c935c9?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 2, name: "Artichaud Beldi", price: 9, image: "https://images.unsplash.com/photo-1604954488605-3c44c9f3c97d?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 3, name: "Asperge", price: 25, image: "https://images.unsplash.com/photo-1617633389437-b211b89e7ae8?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 4, name: "Aubergine", price: 5, image: "https://images.unsplash.com/photo-1659261200833-ec8761558af7?w=800&q=80", unit: "kg", category: "legumes" },
+  { id: 1, name: "Artichaud", price: 10, image: artichaud, unit: "kg", category: "legumes" },
+  { id: 2, name: "Artichaud Beldi", price: 9, image: artichaudBeldi, unit: "kg", category: "legumes" },
+  { id: 3, name: "Asperge", price: 25, image: asperge, unit: "kg", category: "legumes" },
+  { id: 4, name: "Aubergine", price: 5, image: aubergine, unit: "kg", category: "legumes" },
   { id: 5, name: "Broccoli", price: 6, image: "https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 6, name: "Cardon", price: 5, image: "https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=800&q=80", unit: "botte", category: "legumes" },
+  { id: 6, name: "Cardon", price: 5, image: cardon, unit: "botte", category: "legumes" },
   { id: 7, name: "Carotte", price: 5, image: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 8, name: "Champignon", price: 20, image: "https://images.unsplash.com/photo-1565192281544-2c7f9f2e0f8d?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 9, name: "Chou Fleure", price: 8, image: "https://images.unsplash.com/photo-1568584711271-13c8f5b3c145?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 10, name: "Chou Rouge", price: 8, image: "https://images.unsplash.com/photo-1556801712-76c8eb07bbc9?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 11, name: "Chou Vert", price: 6, image: "https://images.unsplash.com/photo-1594282554782-e637aae10c05?w=800&q=80", unit: "kg", category: "legumes" },
+  { id: 8, name: "Champignon", price: 20, image: champignon, unit: "kg", category: "legumes" },
+  { id: 9, name: "Chou Fleure", price: 8, image: chouFleure, unit: "kg", category: "legumes" },
+  { id: 10, name: "Chou Rouge", price: 8, image: chouRouge, unit: "kg", category: "legumes" },
+  { id: 11, name: "Chou Vert", price: 6, image: chouVert, unit: "kg", category: "legumes" },
   { id: 12, name: "Citrouille rouge", price: 8, image: "https://images.unsplash.com/photo-1570586437263-ab629fccc818?w=800&q=80", unit: "kg", category: "legumes" },
   { id: 13, name: "Concombre", price: 8, image: "https://images.unsplash.com/photo-1589621316382-008455b857cd?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 14, name: "Courgette", price: 5, image: "https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 15, name: "Endive", price: 12, image: "https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 16, name: "Epinard", price: 5, image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 17, name: "Epinard Pottes", price: 5, image: "https://images.unsplash.com/photo-1574316071802-0d684efa7bf5?w=800&q=80", unit: "botte", category: "legumes" },
+  { id: 14, name: "Courgette", price: 5, image: courgette, unit: "kg", category: "legumes" },
+  { id: 15, name: "Endive", price: 12, image: endive, unit: "kg", category: "legumes" },
+  { id: 16, name: "Epinard", price: 5, image: epinard, unit: "kg", category: "legumes" },
+  { id: 17, name: "Epinard Pottes", price: 5, image: epinardPottes, unit: "botte", category: "legumes" },
   { id: 18, name: "Fenouil", price: 5, image: "https://images.unsplash.com/photo-1588167162879-483e8f5fdf6b?w=800&q=80", unit: "botte", category: "legumes" },
-  { id: 19, name: "Fève", price: 7, image: "https://images.unsplash.com/photo-1589927986089-35812378b241?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 20, name: "Haricot vert", price: 18, image: "https://images.unsplash.com/photo-1578849278619-e73505e9610f?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 21, name: "Navet", price: 7, image: "https://images.unsplash.com/photo-1602520332239-e27241cfd148?w=800&q=80", unit: "kg", category: "legumes" },
+  { id: 19, name: "Fève", price: 7, image: feve, unit: "kg", category: "legumes" },
+  { id: 20, name: "Haricot vert", price: 18, image: haricotVert, unit: "kg", category: "legumes" },
+  { id: 21, name: "Navet", price: 7, image: navet, unit: "kg", category: "legumes" },
   { id: 22, name: "Oignon", price: 12, image: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 23, name: "Oignon Rouge", price: 12, image: "https://images.unsplash.com/photo-1587411768788-f04e46934bc6?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 24, name: "Oignon Verte", price: 7, image: "https://images.unsplash.com/photo-1553940945-b6f531dad969?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 25, name: "Petit pois", price: 12, image: "https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 26, name: "Poivron Douce", price: 12, image: "https://images.unsplash.com/photo-1601398496181-03fb48fd43c7?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 27, name: "Poivron Rouge", price: 6, image: "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 28, name: "Poivron vert", price: 6, image: "https://images.unsplash.com/photo-1592841200221-4fe5e70cd11a?w=800&q=80", unit: "kg", category: "legumes" },
+  { id: 23, name: "Oignon Rouge", price: 12, image: oignonRouge, unit: "kg", category: "legumes" },
+  { id: 24, name: "Oignon Verte", price: 7, image: oignonVerte, unit: "kg", category: "legumes" },
+  { id: 25, name: "Petit pois", price: 12, image: petitPois, unit: "kg", category: "legumes" },
+  { id: 26, name: "Poivron Douce", price: 12, image: poivronDouce, unit: "kg", category: "legumes" },
+  { id: 27, name: "Poivron Rouge", price: 6, image: poivronRouge, unit: "kg", category: "legumes" },
+  { id: 28, name: "Poivron vert", price: 6, image: poivronVert, unit: "kg", category: "legumes" },
   { id: 29, name: "Pomme de terre Blanche", price: 6, image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 30, name: "Pomme de terre Pt", price: 6, image: "https://images.unsplash.com/photo-1552507911-3d1b65a8a4a5?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 31, name: "Pomme de terre Rouge", price: 6, image: "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 32, name: "Pomme de terre frite", price: 6, image: "https://images.unsplash.com/photo-1573848855919-9abebaec6c08?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 33, name: "TOPINAMBOUR", price: 8, image: "https://images.unsplash.com/photo-1595518945086-5a2ebc6227f7?w=800&q=80", unit: "kg", category: "legumes" },
+  { id: 30, name: "Pomme de terre Pt", price: 6, image: pommeDeTerreRt, unit: "kg", category: "legumes" },
+  { id: 31, name: "Pomme de terre Rouge", price: 6, image: pommeDeTerreRouge, unit: "kg", category: "legumes" },
+  { id: 32, name: "Pomme de terre frite", price: 6, image: pommeDeTerre, unit: "kg", category: "legumes" },
+  { id: 33, name: "TOPINAMBOUR", price: 8, image: topinambour, unit: "kg", category: "legumes" },
   { id: 34, name: "Tomate", price: 6, image: "https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=800&q=80", unit: "kg", category: "legumes" },
-  { id: 35, name: "Betterave", price: 5, image: "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=800&q=80", unit: "kg", category: "legumes" },
+  { id: 35, name: "Betterave", price: 5, image: betterave, unit: "kg", category: "legumes" },
 
   // Fruits
   { id: 36, name: "Ananas", price: 15, image: "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400", unit: "kg", category: "fruits" },

@@ -2,20 +2,30 @@ import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Trash2, MapPin } from "lucide-react";
 import { allProducts } from "@/data/products";
+import { useState } from "react";
 
 const Cart = () => {
   const { getCartItems, updateQuantity, clearCart, cartCount } = useCart();
   const cartItems = getCartItems(allProducts);
+  const [city, setCity] = useState("");
 
   const total = cartItems.reduce((sum, item) => sum + item.total, 0);
 
   const handleWhatsAppOrder = () => {
+    if (!city.trim()) {
+      alert("Veuillez indiquer votre ville pour la livraison");
+      return;
+    }
+
     const phoneNumber = "212660017777"; // WhatsApp number without + and spaces
     
     // Format the order message
     let message = "🛒 *Nouvelle Commande Broccagri*\n\n";
+    message += `📍 *Ville de livraison:* ${city}\n\n`;
     message += "📦 *Détails de la commande:*\n";
     
     cartItems.forEach((item, index) => {
@@ -163,6 +173,23 @@ const Cart = () => {
                   <div className="h-1 w-1 bg-primary rounded-full" />
                   Résumé de la commande
                 </h2>
+                
+                {/* Champ Ville */}
+                <div className="mb-6 space-y-2">
+                  <Label htmlFor="city" className="flex items-center gap-2 font-semibold">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    Ville de livraison
+                  </Label>
+                  <Input
+                    id="city"
+                    type="text"
+                    placeholder="Ex: Casablanca, Rabat..."
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="rounded-lg border-2 focus:border-primary transition-colors"
+                  />
+                </div>
+
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-sm p-3 bg-muted/50 rounded-lg">
                     <span className="text-muted-foreground">Articles</span>
@@ -181,8 +208,9 @@ const Cart = () => {
                 </div>
                 <Button 
                   size="lg" 
-                  className="w-full rounded-full mb-3 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+                  className="w-full rounded-full mb-3 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 font-semibold"
                   onClick={handleWhatsAppOrder}
+                  disabled={!city.trim()}
                 >
                   Commander via WhatsApp
                 </Button>

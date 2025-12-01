@@ -1,5 +1,4 @@
 import { Product } from "@/components/ProductCard";
-import placeholderImg from "@/assets/product-placeholder.jpg";
 
 // Import des images de légumes
 import artichaud from "@/assets/vegetables/artichaud.jpg";
@@ -8,7 +7,7 @@ import asperge from "@/assets/vegetables/asperge.jpg";
 import aubergine from "@/assets/vegetables/aubergine.jpg";
 import cardon from "@/assets/vegetables/cardon.jpg";
 import champignon from "@/assets/vegetables/champignon.jpg";
-import chouFleure from "@/assets/vegetables/chou-fleure.jpg";
+import chouFleureGenerated from "@/assets/vegetables/chou-fleure-generated.jpg";
 import chouRouge from "@/assets/vegetables/chou-rouge.jpg";
 import chouVert from "@/assets/vegetables/chou-vert.jpg";
 import courgette from "@/assets/vegetables/courgette.jpg";
@@ -26,12 +25,12 @@ import poivronRouge from "@/assets/vegetables/poivron-rouge.jpg";
 import poivronVert from "@/assets/vegetables/poivron-vert.jpg";
 import pommeDeTerreRt from "@/assets/vegetables/pomme-de-terre-pt.jpg";
 import pommeDeTerreRouge from "@/assets/vegetables/pomme-de-terre-rouge.jpg";
-import pommeDeTerre from "@/assets/vegetables/pomme-de-terre-frite.jpg";
+import pommeDeTerreBlancheGenerated from "@/assets/vegetables/pomme-de-terre-blanche-generated.jpg";
+import pommeDeTerrefriteGenerated from "@/assets/vegetables/pomme-de-terre-frite-generated.jpg";
 import topinambour from "@/assets/vegetables/topinambour.jpg";
 import betterave from "@/assets/vegetables/betterave.jpg";
 import fenouil from "@/assets/vegetables/fenouil.jpg";
 import oignon from "@/assets/vegetables/oignon.jpg";
-import pommeDeTerreBlanche from "@/assets/vegetables/pomme-de-terre-blanche.jpg";
 
 // Import des images de fruits
 import ananas from "@/assets/fruits/ananas.jpg";
@@ -101,7 +100,7 @@ export const allProducts: ProductWithCategory[] = [
   { id: 6, name: "Cardon", price: 5, image: cardon, unit: "botte", category: "legumes" },
   { id: 7, name: "Carotte", price: 5, image: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=800&q=80", unit: "kg", category: "legumes" },
   { id: 8, name: "Champignon", price: 20, image: champignon, unit: "kg", category: "legumes" },
-  { id: 9, name: "Chou Fleure", price: 8, image: placeholderImg, unit: "kg", category: "legumes" },
+  { id: 9, name: "Chou Fleure", price: 8, image: chouFleureGenerated, unit: "kg", category: "legumes" },
   { id: 10, name: "Chou Rouge", price: 8, image: chouRouge, unit: "kg", category: "legumes" },
   { id: 11, name: "Chou Vert", price: 6, image: chouVert, unit: "kg", category: "legumes" },
   { id: 12, name: "Citrouille rouge", price: 8, image: "https://images.unsplash.com/photo-1570586437263-ab629fccc818?w=800&q=80", unit: "kg", category: "legumes" },
@@ -121,10 +120,10 @@ export const allProducts: ProductWithCategory[] = [
   { id: 26, name: "Poivron Douce", price: 12, image: poivronDouce, unit: "kg", category: "legumes" },
   { id: 27, name: "Poivron Rouge", price: 6, image: poivronRouge, unit: "kg", category: "legumes" },
   { id: 28, name: "Poivron vert", price: 6, image: poivronVert, unit: "kg", category: "legumes" },
-  { id: 29, name: "Pomme de terre Blanche", price: 6, image: placeholderImg, unit: "kg", category: "legumes" },
+  { id: 29, name: "Pomme de terre Blanche", price: 6, image: pommeDeTerreBlancheGenerated, unit: "kg", category: "legumes" },
   { id: 30, name: "Pomme de terre Pt", price: 6, image: pommeDeTerreRt, unit: "kg", category: "legumes" },
   { id: 31, name: "Pomme de terre Rouge", price: 6, image: pommeDeTerreRouge, unit: "kg", category: "legumes" },
-  { id: 32, name: "Pomme de terre frite", price: 6, image: placeholderImg, unit: "kg", category: "legumes" },
+  { id: 32, name: "Pomme de terre frite", price: 6, image: pommeDeTerrefriteGenerated, unit: "kg", category: "legumes" },
   { id: 33, name: "TOPINAMBOUR", price: 8, image: topinambour, unit: "kg", category: "legumes" },
   { id: 34, name: "Tomate", price: 6, image: "https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=800&q=80", unit: "kg", category: "legumes" },
   { id: 35, name: "Betterave", price: 5, image: betterave, unit: "kg", category: "legumes" },

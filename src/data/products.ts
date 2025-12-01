@@ -51,6 +51,41 @@ import pommeLocalGrand from "@/assets/fruits/pomme-local-grand.jpg";
 import pommeLocalMoyen from "@/assets/fruits/pomme-local-moyen.jpg";
 import pommeDouce from "@/assets/fruits/pomme-douce.jpg";
 
+// Import des images de salades
+import bataviaRouge from "@/assets/salads/batavia-rouge.jpg";
+import bataviaVerte from "@/assets/salads/batavia-verte.jpg";
+import cheneVerte from "@/assets/salads/chene-verte.jpg";
+import cheneRouge from "@/assets/salads/chene-rouge.jpg";
+import celeriRave from "@/assets/salads/celeri-rave.jpg";
+import germeAlfafa from "@/assets/salads/germe-alfafa.jpg";
+import germeBetterave from "@/assets/salads/germe-betterave.jpg";
+import germePoireau from "@/assets/salads/germe-poireau.jpg";
+import iceberg from "@/assets/salads/iceberg.jpg";
+import laitueRomain from "@/assets/salads/laitue-romain.jpg";
+import laitueRouge from "@/assets/salads/laitue-rouge.jpg";
+import laitueVerte from "@/assets/salads/laitue-verte.jpg";
+import loloRouge from "@/assets/salads/lolo-rouge.jpg";
+import mesclun from "@/assets/salads/mesclun.jpg";
+import mache from "@/assets/salads/mache.jpg";
+import pousseBetterave from "@/assets/salads/pousse-betterave.jpg";
+import pousseEpinard from "@/assets/salads/pousse-epinard.jpg";
+import roquette from "@/assets/salads/roquette.jpg";
+import saladeFrise from "@/assets/salads/salade-frise.jpg";
+import tomateCerise from "@/assets/salads/tomate-cerise.jpg";
+
+// Import des images de herbes
+import aneth from "@/assets/herbs/aneth.jpg";
+import basilic from "@/assets/herbs/basilic.jpg";
+import celeri from "@/assets/herbs/celeri.jpg";
+import chiba from "@/assets/herbs/chiba.jpg";
+import ciboulette from "@/assets/herbs/ciboulette.jpg";
+import coriandre from "@/assets/herbs/coriandre.jpg";
+import mauveDesBois from "@/assets/herbs/mauve-des-bois.jpg";
+import menthe from "@/assets/herbs/menthe.jpg";
+import persil from "@/assets/herbs/persil.jpg";
+import romarin from "@/assets/herbs/romarin.jpg";
+import thym from "@/assets/herbs/thym.jpg";
+
 export interface ProductWithCategory extends Product {
   category: string;
 }
@@ -113,37 +148,37 @@ export const allProducts: ProductWithCategory[] = [
   { id: 52, name: "Pomme douce", price: 7, image: pommeDouce, unit: "kg", category: "fruits" },
 
   // Salades
-  { id: 53, name: "Batavia Rouge", price: 5, image: "https://images.unsplash.com/photo-1622450783272-16ac44b2d8b9?w=400", unit: "pièce", category: "salades" },
-  { id: 54, name: "Batavia Verte", price: 5, image: "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400", unit: "pièce", category: "salades" },
-  { id: 55, name: "Chêne Verte", price: 6, image: "https://images.unsplash.com/photo-1640958476606-d5e7c0cdcd23?w=400", unit: "pièce", category: "salades" },
-  { id: 56, name: "Chêne rouge", price: 6, image: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=400", unit: "pièce", category: "salades" },
-  { id: 57, name: "Céleri-rave", price: 7, image: "https://images.unsplash.com/photo-1599375986783-b1f9d088f8b6?w=400", unit: "kg", category: "salades" },
-  { id: 58, name: "Germe Alfafa", price: 8, image: "https://images.unsplash.com/photo-1607532941433-304659e8198a?w=400", unit: "botte", category: "salades" },
-  { id: 59, name: "Germe Betterave", price: 8, image: "https://images.unsplash.com/photo-1625756753264-96d7f6327e1e?w=400", unit: "botte", category: "salades" },
-  { id: 60, name: "Germe Poireau", price: 8, image: "https://images.unsplash.com/photo-1609501676725-7186f017a4b7?w=400", unit: "botte", category: "salades" },
-  { id: 61, name: "Iceberg", price: 5, image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400", unit: "pièce", category: "salades" },
-  { id: 62, name: "Laitue Romain", price: 5, image: "https://images.unsplash.com/photo-1640958476606-d5e7c0cdcd23?w=400", unit: "pièce", category: "salades" },
-  { id: 63, name: "Laitue Rouge", price: 5, image: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=400", unit: "pièce", category: "salades" },
-  { id: 64, name: "Laitue Verte", price: 4, image: "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400", unit: "pièce", category: "salades" },
-  { id: 65, name: "Lolo Rouge", price: 6, image: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?w=400", unit: "pièce", category: "salades" },
-  { id: 66, name: "Mesclun", price: 9, image: "https://images.unsplash.com/photo-1591368876792-f0e9eec1f05f?w=400", unit: "botte", category: "salades" },
-  { id: 67, name: "Mâche", price: 7, image: "https://images.unsplash.com/photo-1647241679799-6fe40c86c5b1?w=400", unit: "botte", category: "salades" },
-  { id: 68, name: "Pousse Betterave", price: 8, image: "https://images.unsplash.com/photo-1625756753264-96d7f6327e1e?w=400", unit: "botte", category: "salades" },
-  { id: 69, name: "Pousse Epinard", price: 8, image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400", unit: "botte", category: "salades" },
-  { id: 70, name: "Roquette", price: 6, image: "https://images.unsplash.com/photo-1591368876792-f0e9eec1f05f?w=400", unit: "botte", category: "salades" },
-  { id: 71, name: "Salade Frisé", price: 5, image: "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400", unit: "pièce", category: "salades" },
-  { id: 72, name: "Tomate Cerise", price: 12, image: "https://images.unsplash.com/photo-1623231612899-418ed41420d5?w=400", unit: "kg", category: "salades" },
+  { id: 53, name: "Batavia Rouge", price: 5, image: bataviaRouge, unit: "pièce", category: "salades" },
+  { id: 54, name: "Batavia Verte", price: 5, image: bataviaVerte, unit: "pièce", category: "salades" },
+  { id: 55, name: "Chêne Verte", price: 6, image: cheneVerte, unit: "pièce", category: "salades" },
+  { id: 56, name: "Chêne rouge", price: 6, image: cheneRouge, unit: "pièce", category: "salades" },
+  { id: 57, name: "Céleri-rave", price: 7, image: celeriRave, unit: "kg", category: "salades" },
+  { id: 58, name: "Germe Alfafa", price: 8, image: germeAlfafa, unit: "botte", category: "salades" },
+  { id: 59, name: "Germe Betterave", price: 8, image: germeBetterave, unit: "botte", category: "salades" },
+  { id: 60, name: "Germe Poireau", price: 8, image: germePoireau, unit: "botte", category: "salades" },
+  { id: 61, name: "Iceberg", price: 5, image: iceberg, unit: "pièce", category: "salades" },
+  { id: 62, name: "Laitue Romain", price: 5, image: laitueRomain, unit: "pièce", category: "salades" },
+  { id: 63, name: "Laitue Rouge", price: 5, image: laitueRouge, unit: "pièce", category: "salades" },
+  { id: 64, name: "Laitue Verte", price: 4, image: laitueVerte, unit: "pièce", category: "salades" },
+  { id: 65, name: "Lolo Rouge", price: 6, image: loloRouge, unit: "pièce", category: "salades" },
+  { id: 66, name: "Mesclun", price: 9, image: mesclun, unit: "botte", category: "salades" },
+  { id: 67, name: "Mâche", price: 7, image: mache, unit: "botte", category: "salades" },
+  { id: 68, name: "Pousse Betterave", price: 8, image: pousseBetterave, unit: "botte", category: "salades" },
+  { id: 69, name: "Pousse Epinard", price: 8, image: pousseEpinard, unit: "botte", category: "salades" },
+  { id: 70, name: "Roquette", price: 6, image: roquette, unit: "botte", category: "salades" },
+  { id: 71, name: "Salade Frisé", price: 5, image: saladeFrise, unit: "pièce", category: "salades" },
+  { id: 72, name: "Tomate Cerise", price: 12, image: tomateCerise, unit: "kg", category: "salades" },
 
   // Herbes
-  { id: 73, name: "Aneth", price: 3, image: "https://images.unsplash.com/photo-1585411241865-99a2e788cfb8?w=400", unit: "botte", category: "herbes" },
-  { id: 74, name: "Basilic", price: 3, image: "https://images.unsplash.com/photo-1618375569909-3c8616cf7122?w=400", unit: "botte", category: "herbes" },
-  { id: 75, name: "Celeri", price: 4, image: "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400", unit: "botte", category: "herbes" },
-  { id: 76, name: "Chiba", price: 3, image: "https://images.unsplash.com/photo-1609501676725-7186f017a4b7?w=400", unit: "botte", category: "herbes" },
-  { id: 77, name: "Ciboulette", price: 3, image: "https://images.unsplash.com/photo-1625875098370-790e32ea5efe?w=400", unit: "botte", category: "herbes" },
-  { id: 78, name: "Coriandre", price: 2, image: "https://images.unsplash.com/photo-1592415486689-125cbbfcbee2?w=400", unit: "botte", category: "herbes" },
-  { id: 79, name: "Mauve des Bois", price: 4, image: "https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=400", unit: "botte", category: "herbes" },
-  { id: 80, name: "Menthe", price: 2, image: "https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?w=400", unit: "botte", category: "herbes" },
-  { id: 81, name: "Persil", price: 2, image: "https://images.unsplash.com/photo-1616781973119-2e0d27b26e91?w=400", unit: "botte", category: "herbes" },
-  { id: 82, name: "Romarin", price: 3, image: "https://images.unsplash.com/photo-1592324626710-6ab66e1e1b7b?w=400", unit: "botte", category: "herbes" },
-  { id: 83, name: "Thym", price: 3, image: "https://images.unsplash.com/photo-1598210249730-f7ab092e5ae3?w=400", unit: "botte", category: "herbes" },
+  { id: 73, name: "Aneth", price: 3, image: aneth, unit: "botte", category: "herbes" },
+  { id: 74, name: "Basilic", price: 3, image: basilic, unit: "botte", category: "herbes" },
+  { id: 75, name: "Celeri", price: 4, image: celeri, unit: "botte", category: "herbes" },
+  { id: 76, name: "Chiba", price: 3, image: chiba, unit: "botte", category: "herbes" },
+  { id: 77, name: "Ciboulette", price: 3, image: ciboulette, unit: "botte", category: "herbes" },
+  { id: 78, name: "Coriandre", price: 2, image: coriandre, unit: "botte", category: "herbes" },
+  { id: 79, name: "Mauve des Bois", price: 4, image: mauveDesBois, unit: "botte", category: "herbes" },
+  { id: 80, name: "Menthe", price: 2, image: menthe, unit: "botte", category: "herbes" },
+  { id: 81, name: "Persil", price: 2, image: persil, unit: "botte", category: "herbes" },
+  { id: 82, name: "Romarin", price: 3, image: romarin, unit: "botte", category: "herbes" },
+  { id: 83, name: "Thym", price: 3, image: thym, unit: "botte", category: "herbes" },
 ];

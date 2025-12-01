@@ -28,6 +28,9 @@ import pommeDeTerreRouge from "@/assets/vegetables/pomme-de-terre-rouge.jpg";
 import pommeDeTerre from "@/assets/vegetables/pomme-de-terre-frite.jpg";
 import topinambour from "@/assets/vegetables/topinambour.jpg";
 import betterave from "@/assets/vegetables/betterave.jpg";
+import fenouil from "@/assets/vegetables/fenouil.jpg";
+import oignon from "@/assets/vegetables/oignon.jpg";
+import pommeDeTerreBlanche from "@/assets/vegetables/pomme-de-terre-blanche.jpg";
 
 export interface ProductWithCategory extends Product {
   category: string;
@@ -52,18 +55,18 @@ export const allProducts: ProductWithCategory[] = [
   { id: 15, name: "Endive", price: 12, image: endive, unit: "kg", category: "legumes" },
   { id: 16, name: "Epinard", price: 5, image: epinard, unit: "kg", category: "legumes" },
   { id: 17, name: "Epinard Pottes", price: 5, image: epinardPottes, unit: "botte", category: "legumes" },
-  { id: 18, name: "Fenouil", price: 5, image: "https://images.unsplash.com/photo-1588167162879-483e8f5fdf6b?w=800&q=80", unit: "botte", category: "legumes" },
+  { id: 18, name: "Fenouil", price: 5, image: fenouil, unit: "botte", category: "legumes" },
   { id: 19, name: "Fève", price: 7, image: feve, unit: "kg", category: "legumes" },
   { id: 20, name: "Haricot vert", price: 18, image: haricotVert, unit: "kg", category: "legumes" },
   { id: 21, name: "Navet", price: 7, image: navet, unit: "kg", category: "legumes" },
-  { id: 22, name: "Oignon", price: 12, image: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=800&q=80", unit: "kg", category: "legumes" },
+  { id: 22, name: "Oignon", price: 12, image: oignon, unit: "kg", category: "legumes" },
   { id: 23, name: "Oignon Rouge", price: 12, image: oignonRouge, unit: "kg", category: "legumes" },
   { id: 24, name: "Oignon Verte", price: 7, image: oignonVerte, unit: "kg", category: "legumes" },
   { id: 25, name: "Petit pois", price: 12, image: petitPois, unit: "kg", category: "legumes" },
   { id: 26, name: "Poivron Douce", price: 12, image: poivronDouce, unit: "kg", category: "legumes" },
   { id: 27, name: "Poivron Rouge", price: 6, image: poivronRouge, unit: "kg", category: "legumes" },
   { id: 28, name: "Poivron vert", price: 6, image: poivronVert, unit: "kg", category: "legumes" },
-  { id: 29, name: "Pomme de terre Blanche", price: 6, image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=800&q=80", unit: "kg", category: "legumes" },
+  { id: 29, name: "Pomme de terre Blanche", price: 6, image: pommeDeTerreBlanche, unit: "kg", category: "legumes" },
   { id: 30, name: "Pomme de terre Pt", price: 6, image: pommeDeTerreRt, unit: "kg", category: "legumes" },
   { id: 31, name: "Pomme de terre Rouge", price: 6, image: pommeDeTerreRouge, unit: "kg", category: "legumes" },
   { id: 32, name: "Pomme de terre frite", price: 6, image: pommeDeTerre, unit: "kg", category: "legumes" },

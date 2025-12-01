@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 interface ValidateButtonProps {
@@ -6,14 +7,12 @@ interface ValidateButtonProps {
 }
 
 export const ValidateButton = ({ cartCount }: ValidateButtonProps) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleValidate = () => {
     if (cartCount > 0) {
-      toast({
-        title: "Panier validé !",
-        description: `Vous avez ${cartCount} article(s) dans votre panier.`,
-      });
+      navigate("/panier");
     } else {
       toast({
         title: "Panier vide",
@@ -31,7 +30,7 @@ export const ValidateButton = ({ cartCount }: ValidateButtonProps) => {
           size="lg"
           className="w-full md:w-auto md:min-w-[300px] mx-auto block text-lg py-6 rounded-full shadow-xl"
         >
-          Valider le Panier
+          Voir le Panier {cartCount > 0 && `(${cartCount})`}
         </Button>
       </div>
     </div>

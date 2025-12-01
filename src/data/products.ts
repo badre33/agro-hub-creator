@@ -32,6 +32,25 @@ import fenouil from "@/assets/vegetables/fenouil.jpg";
 import oignon from "@/assets/vegetables/oignon.jpg";
 import pommeDeTerreBlanche from "@/assets/vegetables/pomme-de-terre-blanche.jpg";
 
+// Import des images de fruits
+import ananas from "@/assets/fruits/ananas.jpg";
+import avocat from "@/assets/fruits/avocat.jpg";
+import bananeImporte from "@/assets/fruits/banane-importe.jpg";
+import bananeLocal from "@/assets/fruits/banane-local.jpg";
+import citron from "@/assets/fruits/citron.jpg";
+import fraise from "@/assets/fruits/fraise.jpg";
+import kaki from "@/assets/fruits/kaki.jpg";
+import kiwi from "@/assets/fruits/kiwi.jpg";
+import mangue from "@/assets/fruits/mangue.jpg";
+import orangeClementine from "@/assets/fruits/orange-clementine.jpg";
+import orangeNafel from "@/assets/fruits/orange-nafel.jpg";
+import orangeJus from "@/assets/fruits/orange-jus.jpg";
+import poire from "@/assets/fruits/poire.jpg";
+import pommeImport from "@/assets/fruits/pomme-import.jpg";
+import pommeLocalGrand from "@/assets/fruits/pomme-local-grand.jpg";
+import pommeLocalMoyen from "@/assets/fruits/pomme-local-moyen.jpg";
+import pommeDouce from "@/assets/fruits/pomme-douce.jpg";
+
 export interface ProductWithCategory extends Product {
   category: string;
 }
@@ -75,23 +94,23 @@ export const allProducts: ProductWithCategory[] = [
   { id: 35, name: "Betterave", price: 5, image: betterave, unit: "kg", category: "legumes" },
 
   // Fruits
-  { id: 36, name: "Ananas", price: 15, image: "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400", unit: "kg", category: "fruits" },
-  { id: 37, name: "Avocat", price: 20, image: "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400", unit: "kg", category: "fruits" },
-  { id: 38, name: "Banane Importé", price: 12, image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400", unit: "kg", category: "fruits" },
-  { id: 39, name: "Banane Local", price: 10, image: "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=400", unit: "kg", category: "fruits" },
-  { id: 40, name: "Citron", price: 8, image: "https://images.unsplash.com/photo-1590502593747-42a996133562?w=400", unit: "kg", category: "fruits" },
-  { id: 41, name: "Fraise", price: 15, image: "https://images.unsplash.com/photo-1543528176-61b239494933?w=400", unit: "kg", category: "fruits" },
-  { id: 42, name: "Kaki", price: 12, image: "https://images.unsplash.com/photo-1577234286642-fc512a5f8f11?w=400", unit: "kg", category: "fruits" },
-  { id: 43, name: "Kiwi", price: 15, image: "https://images.unsplash.com/photo-1585059895524-72359e9d7a05?w=400", unit: "kg", category: "fruits" },
-  { id: 44, name: "Mangue", price: 18, image: "https://images.unsplash.com/photo-1605528355762-9aec09c26c45?w=400", unit: "kg", category: "fruits" },
-  { id: 45, name: "Orange Clementine", price: 8, image: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=400", unit: "kg", category: "fruits" },
-  { id: 46, name: "Orange Nafel", price: 8, image: "https://images.unsplash.com/photo-1547514701-42782101795e?w=400", unit: "kg", category: "fruits" },
-  { id: 47, name: "Orange à jus", price: 7, image: "https://images.unsplash.com/photo-1582979512210-99b6a53386f9?w=400", unit: "kg", category: "fruits" },
-  { id: 48, name: "Poire", price: 12, image: "https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?w=400", unit: "kg", category: "fruits" },
-  { id: 49, name: "Pomme Import", price: 12, image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400", unit: "kg", category: "fruits" },
-  { id: 50, name: "Pomme Local Calibre Grand", price: 10, image: "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=400", unit: "kg", category: "fruits" },
-  { id: 51, name: "Pomme Local Calibre Moyen", price: 9, image: "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400", unit: "kg", category: "fruits" },
-  { id: 52, name: "Pomme douce", price: 7, image: "https://images.unsplash.com/photo-1592940296197-fbb84fc902fc?w=400", unit: "kg", category: "fruits" },
+  { id: 36, name: "Ananas", price: 15, image: ananas, unit: "kg", category: "fruits" },
+  { id: 37, name: "Avocat", price: 20, image: avocat, unit: "kg", category: "fruits" },
+  { id: 38, name: "Banane Importé", price: 12, image: bananeImporte, unit: "kg", category: "fruits" },
+  { id: 39, name: "Banane Local", price: 10, image: bananeLocal, unit: "kg", category: "fruits" },
+  { id: 40, name: "Citron", price: 8, image: citron, unit: "kg", category: "fruits" },
+  { id: 41, name: "Fraise", price: 15, image: fraise, unit: "kg", category: "fruits" },
+  { id: 42, name: "Kaki", price: 12, image: kaki, unit: "kg", category: "fruits" },
+  { id: 43, name: "Kiwi", price: 15, image: kiwi, unit: "kg", category: "fruits" },
+  { id: 44, name: "Mangue", price: 18, image: mangue, unit: "kg", category: "fruits" },
+  { id: 45, name: "Orange Clementine", price: 8, image: orangeClementine, unit: "kg", category: "fruits" },
+  { id: 46, name: "Orange Nafel", price: 8, image: orangeNafel, unit: "kg", category: "fruits" },
+  { id: 47, name: "Orange à jus", price: 7, image: orangeJus, unit: "kg", category: "fruits" },
+  { id: 48, name: "Poire", price: 12, image: poire, unit: "kg", category: "fruits" },
+  { id: 49, name: "Pomme Import", price: 12, image: pommeImport, unit: "kg", category: "fruits" },
+  { id: 50, name: "Pomme Local Calibre Grand", price: 10, image: pommeLocalGrand, unit: "kg", category: "fruits" },
+  { id: 51, name: "Pomme Local Calibre Moyen", price: 9, image: pommeLocalMoyen, unit: "kg", category: "fruits" },
+  { id: 52, name: "Pomme douce", price: 7, image: pommeDouce, unit: "kg", category: "fruits" },
 
   // Salades
   { id: 53, name: "Batavia Rouge", price: 5, image: "https://images.unsplash.com/photo-1622450783272-16ac44b2d8b9?w=400", unit: "pièce", category: "salades" },

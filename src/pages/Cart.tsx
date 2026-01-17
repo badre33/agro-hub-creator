@@ -4,44 +4,110 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Minus, Plus, ShoppingCart, Trash2, MapPin } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Trash2, MapPin, Loader2 } from "lucide-react";
 import { allProducts } from "@/data/products";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Cart = () => {
   const { getCartItems, updateQuantity, clearCart, cartCount } = useCart();
   const cartItems = getCartItems(allProducts);
   const [city, setCity] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const total = cartItems.reduce((sum, item) => sum + item.total, 0);
 
-  const handleWhatsAppOrder = () => {
-    if (!city.trim()) {
-      alert("Veuillez indiquer votre ville pour la livraison");
+  const handleSubmitOrder = async () => {
+    if (!city.trim() || !customerName.trim() || !customerPhone.trim()) {
+      toast({
+        title: "Informations manquantes",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
       return;
     }
 
-    const phoneNumber = "212660017777"; // WhatsApp number without + and spaces
-    
-    // Format the order message
-    let message = "🛒 *Nouvelle Commande Broccagri*\n\n";
-    message += `📍 *Ville de livraison:* ${city}\n\n`;
-    message += "📦 *Détails de la commande:*\n";
-    
-    cartItems.forEach((item, index) => {
-      message += `\n${index + 1}. *${item.name}*\n`;
-      message += `   Quantité: ${item.quantity} ${item.unit}\n`;
-      message += `   Prix unitaire: ${item.price} DH/${item.unit}\n`;
-      message += `   Total: ${item.total.toFixed(2)} DH\n`;
-    });
-    
-    message += `\n💰 *Total de la commande: ${total.toFixed(2)} DH*`;
-    
-    // Encode the message for URL
-    const encodedMessage = encodeURIComponent(message);
-    
-    // Open WhatsApp with the message
-    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+    setIsSubmitting(true);
+
+    try {
+      // 1. Create the order
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          customer_name: customerName.trim(),
+          customer_phone: customerPhone.trim(),
+          delivery_city: city.trim(),
+          total_amount: total,
+          notes: notes.trim() || null,
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // 2. Create order items
+      const orderItems = cartItems.map((item) => ({
+        order_id: orderData.id,
+        product_name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        product_price: item.price,
+        subtotal: item.total,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // 3. Send email notification
+      const { error: emailError } = await supabase.functions.invoke(
+        "send-order-email",
+        {
+          body: {
+            order_id: orderData.id,
+            customer_name: customerName.trim(),
+            customer_phone: customerPhone.trim(),
+            delivery_city: city.trim(),
+            total_amount: total,
+            items: orderItems,
+            notes: notes.trim() || undefined,
+          },
+        }
+      );
+
+      if (emailError) {
+        console.error("Email error:", emailError);
+        // Continue even if email fails
+      }
+
+      // 4. Clear cart and show success
+      clearCart();
+      setCity("");
+      setCustomerName("");
+      setCustomerPhone("");
+      setNotes("");
+
+      toast({
+        title: "Commande envoyée! ✅",
+        description: `Votre commande #${orderData.id.slice(0, 8)} a été enregistrée avec succès. Nous vous contacterons bientôt.`,
+      });
+    } catch (error: any) {
+      console.error("Order error:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleIncrement = (productId: number, currentQuantity: number) => {
@@ -171,23 +237,67 @@ const Cart = () => {
               <Card className="p-4 sm:p-6 lg:sticky lg:top-24 shadow-lg border-2">
                 <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 flex items-center gap-2">
                   <div className="h-1 w-1 bg-primary rounded-full" />
-                  Résumé
+                  Finaliser la commande
                 </h2>
                 
-                {/* Champ Ville */}
-                <div className="mb-4 sm:mb-6 space-y-2">
-                  <Label htmlFor="city" className="flex items-center gap-2 font-semibold text-sm sm:text-base">
-                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-                    Ville de livraison
-                  </Label>
-                  <Input
-                    id="city"
-                    type="text"
-                    placeholder="Ex: Casablanca, Rabat..."
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
-                  />
+                {/* Champs client */}
+                <div className="space-y-4 mb-4 sm:mb-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="customerName" className="font-semibold text-sm sm:text-base">
+                      Nom complet *
+                    </Label>
+                    <Input
+                      id="customerName"
+                      type="text"
+                      placeholder="Votre nom"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="customerPhone" className="font-semibold text-sm sm:text-base">
+                      Téléphone *
+                    </Label>
+                    <Input
+                      id="customerPhone"
+                      type="tel"
+                      placeholder="06XXXXXXXX"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="city" className="flex items-center gap-2 font-semibold text-sm sm:text-base">
+                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                      Ville de livraison *
+                    </Label>
+                    <Input
+                      id="city"
+                      type="text"
+                      placeholder="Ex: Casablanca, Rabat..."
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="notes" className="font-semibold text-sm sm:text-base">
+                      Notes (optionnel)
+                    </Label>
+                    <Input
+                      id="notes"
+                      type="text"
+                      placeholder="Instructions spéciales..."
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
@@ -209,16 +319,24 @@ const Cart = () => {
                 <Button 
                   size="lg" 
                   className="w-full rounded-full mb-2 sm:mb-3 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 font-semibold text-sm sm:text-base py-5 sm:py-6"
-                  onClick={handleWhatsAppOrder}
-                  disabled={!city.trim()}
+                  onClick={handleSubmitOrder}
+                  disabled={isSubmitting || !city.trim() || !customerName.trim() || !customerPhone.trim()}
                 >
-                  Commander via WhatsApp
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    "Passer la commande"
+                  )}
                 </Button>
                 <Button
                   variant="outline"
                   size="lg"
                   className="w-full rounded-full hover:bg-destructive/10 hover:text-destructive hover:border-destructive transition-colors text-sm sm:text-base py-5 sm:py-6"
                   onClick={clearCart}
+                  disabled={isSubmitting}
                 >
                   Vider le panier
                 </Button>

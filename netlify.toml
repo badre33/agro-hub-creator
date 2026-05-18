@@ -1,7 +1,8 @@
 # Netlify config — boutique Broccagri
-# Vite build directement dans dist/boutique/ (cf. vite.config.ts).
-# Les fichiers sont physiquement à l'emplacement attendu par les URLs avec base /boutique/.
-# Donc pas de rewrites compliqués : juste un SPA fallback et une redirection racine.
+# Avec base absolue https://broccagrishop.netlify.app/ dans vite.config.ts,
+# les assets sont chargés directement depuis ce domaine, peu importe l'URL
+# dans la barre du navigateur (qui sera broccagri.ma/boutique via proxy).
+# Du coup la config Netlify reste minimale : juste un SPA fallback.
 
 [build]
   publish = "dist"
@@ -12,27 +13,22 @@
 
 # Cache long pour les assets versionnés par Vite
 [[headers]]
-  for = "/boutique/assets/*"
+  for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
 
-# En-têtes de sécurité de base
+# CORS pour les fonts/static (chargés en cross-origin depuis broccagri.ma)
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Access-Control-Allow-Origin = "*"
 
-# SPA fallback : toute route /boutique/quelque-chose sans fichier réel
-# doit servir /boutique/index.html (qui charge React Router avec basename /boutique).
+# SPA fallback (React Router avec basename /boutique côté code)
 [[redirects]]
-  from = "/boutique/*"
-  to = "/boutique/index.html"
+  from = "/*"
+  to = "/index.html"
   status = 200
-
-# Quelqu'un atteint la racine du domaine → on le redirige vers /boutique/
-[[redirects]]
-  from = "/"
-  to = "/boutique/"
-  status = 302

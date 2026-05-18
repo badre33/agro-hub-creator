@@ -3,16 +3,13 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 // https://vitejs.dev/config/
-// En production le shop est servi sous /boutique/ via proxy Netlify depuis le vitrine.
-// On build directement dans dist/boutique/ pour que les fichiers soient physiquement
-// à l'emplacement attendu par les URLs (pas besoin de rewrites compliqués côté Netlify).
-// En dev local, on reste au root pour ne pas casser le DX.
+// Le shop est servi sous broccagri.ma/boutique via reverse proxy depuis le vitrine.
+// En production, les assets sont référencés en URL ABSOLUE vers le domaine shop
+// pour éviter les bricolages de rewrites Netlify entre les deux apps.
+// En dev local, on reste au root pour un DX simple.
 export default defineConfig(({ command }) => ({
-  base: command === "build" ? "/boutique/" : "/",
-  build: {
-    outDir: command === "build" ? "dist/boutique" : "dist",
-    emptyOutDir: true,
-  },
+  base:
+    command === "build" ? "https://broccagrishop.netlify.app/" : "/",
   server: {
     host: "::",
     port: 8080,

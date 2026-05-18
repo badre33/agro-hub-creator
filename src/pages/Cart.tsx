@@ -35,24 +35,25 @@ const Cart = () => {
     setIsSubmitting(true);
 
     try {
+      const orderId = crypto.randomUUID();
+
       // 1. Create the order
-      const { data: orderData, error: orderError } = await supabase
+      const { error: orderError } = await supabase
         .from("orders")
         .insert({
+          id: orderId,
           customer_name: customerName.trim(),
           customer_phone: customerPhone.trim(),
           delivery_city: city.trim(),
           total_amount: total,
           notes: notes.trim() || null,
-        })
-        .select()
-        .single();
+        });
 
       if (orderError) throw orderError;
 
       // 2. Create order items
       const orderItems = cartItems.map((item) => ({
-        order_id: orderData.id,
+        order_id: orderId,
         product_name: item.name,
         quantity: item.quantity,
         unit: item.unit,
@@ -71,7 +72,7 @@ const Cart = () => {
         "send-order-email",
         {
           body: {
-            order_id: orderData.id,
+            order_id: orderId,
             customer_name: customerName.trim(),
             customer_phone: customerPhone.trim(),
             delivery_city: city.trim(),
@@ -96,7 +97,7 @@ const Cart = () => {
 
       toast({
         title: "Commande envoyée! ✅",
-        description: `Votre commande #${orderData.id.slice(0, 8)} a été enregistrée avec succès. Nous vous contacterons bientôt.`,
+        description: `Votre commande #${orderId.slice(0, 8)} a été enregistrée avec succès. Nous vous contacterons bientôt.`,
       });
     } catch (error: any) {
       console.error("Order error:", error);

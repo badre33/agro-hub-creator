@@ -1,6 +1,8 @@
 # Netlify config — boutique Broccagri
 # Le shop est build avec base='/boutique/' (cf. vite.config.ts) et déployé sur
-# un site Netlify dédié. Le vitrine proxy broccagri.ma/boutique/* vers cette URL.
+# un site Netlify dédié. Les URLs des assets dans le HTML buildé commencent par
+# /boutique/, mais les fichiers réels sont à dist/{index.html, assets/...}.
+# Les redirects ci-dessous traduisent /boutique/* vers les vrais fichiers.
 
 [build]
   publish = "dist"
@@ -11,7 +13,7 @@
 
 # Cache long pour les assets versionnés par Vite
 [[headers]]
-  for = "/boutique/assets/*"
+  for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
@@ -23,16 +25,44 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
-# SPA fallback pour React Router (basename="/boutique")
-# Toute URL /boutique/quelquechose sans fichier correspondant doit servir index.html
+# === REDIRECTS — ordre = du plus spécifique au plus général ===
+
+# 1. Assets versionnés Vite : /boutique/assets/foo.js → /assets/foo.js
 [[redirects]]
-  from = "/boutique/*"
-  to = "/boutique/index.html"
+  from = "/boutique/assets/*"
+  to = "/assets/:splat"
   status = 200
 
-# Catch-all : si quelqu'un visite directement broccagri-shop.netlify.app/
-# on le renvoie vers la boutique
+# 2. Fichiers statiques publics référencés sous /boutique/ par Vite
 [[redirects]]
-  from = "/*"
+  from = "/boutique/broccagri-logo.png"
+  to = "/broccagri-logo.png"
+  status = 200
+
+[[redirects]]
+  from = "/boutique/favicon.ico"
+  to = "/favicon.ico"
+  status = 200
+
+[[redirects]]
+  from = "/boutique/placeholder.svg"
+  to = "/placeholder.svg"
+  status = 200
+
+[[redirects]]
+  from = "/boutique/robots.txt"
+  to = "/robots.txt"
+  status = 200
+
+# 3. SPA fallback : toute route /boutique/quelque-chose sans fichier réel
+#    doit servir le index.html (qui charge React Router avec basename /boutique).
+[[redirects]]
+  from = "/boutique/*"
+  to = "/index.html"
+  status = 200
+
+# 4. Quelqu'un atteint le domaine sans /boutique → on l'envoie vers /boutique/
+[[redirects]]
+  from = "/"
   to = "/boutique/"
   status = 302

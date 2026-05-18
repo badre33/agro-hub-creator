@@ -1,73 +1,54 @@
-# Welcome to your Lovable project
+# Broccagri — Boutique
 
-## Project info
+Boutique en ligne de Broccagri, déployée sous `broccagri.ma/boutique`. Catalogue de fruits et légumes, panier, commande par facture directe (pas de paiement en ligne), back-office admin pour le suivi des commandes.
 
-**URL**: https://lovable.dev/projects/8853cd55-678c-437c-bf5a-4373d692962c
+## Stack
 
-## How can I edit this code?
+- Vite + React 18 + TypeScript
+- shadcn/ui + Tailwind CSS
+- Supabase (orders, order_items, user_roles, auth admin)
+- Edge Function Deno : génération facture PDF + envoi WhatsApp Cloud API + email Resend
+- React Router
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/8853cd55-678c-437c-bf5a-4373d692962c) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Développement local
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Le serveur démarre sur `http://localhost:8080`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Variables d'environnement
 
-**Use GitHub Codespaces**
+Copier `.env.example` vers `.env.local` et renseigner :
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+VITE_SUPABASE_PROJECT_ID=
+```
 
-## What technologies are used for this project?
+Les secrets Edge Function (`RESEND_API_KEY`, `ADMIN_EMAIL`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`) sont configurés directement dans Supabase Dashboard.
 
-This project is built with:
+## Routes
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `/` → Catalogue produits avec filtres par catégorie
+- `/panier` → Panier + formulaire de commande
+- `/admin` → Back-office (commandes, statuts)
+- `/login` → Auth Supabase admin
 
-## How can I deploy this project?
+## Workflow commande
 
-Simply open [Lovable](https://lovable.dev/projects/8853cd55-678c-437c-bf5a-4373d692962c) and click on Share -> Publish.
+1. Client choisit ses produits → panier (localStorage)
+2. Saisie nom + téléphone + ville + notes
+3. Création commande en DB Supabase
+4. Edge Function `send-order-email` :
+   - Génère une facture PDF (pdf-lib)
+   - Envoie à l'admin par email (Resend)
+   - Envoie au client par WhatsApp Cloud API (avec PDF en pièce jointe)
+5. L'admin met à jour le statut dans `/admin` : pending → confirmed → preparing → delivered
 
-## Can I connect a custom domain to my Lovable project?
+## Déploiement
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Déployé via Netlify, monté sous `broccagri.ma/boutique` par reverse proxy depuis le vitrine.

@@ -1,0 +1,38 @@
+# Netlify config — boutique Broccagri
+# Le shop est build avec base='/boutique/' (cf. vite.config.ts) et déployé sur
+# un site Netlify dédié. Le vitrine proxy broccagri.ma/boutique/* vers cette URL.
+
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Cache long pour les assets versionnés par Vite
+[[headers]]
+  for = "/boutique/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# En-têtes de sécurité de base
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# SPA fallback pour React Router (basename="/boutique")
+# Toute URL /boutique/quelquechose sans fichier correspondant doit servir index.html
+[[redirects]]
+  from = "/boutique/*"
+  to = "/boutique/index.html"
+  status = 200
+
+# Catch-all : si quelqu'un visite directement broccagri-shop.netlify.app/
+# on le renvoie vers la boutique
+[[redirects]]
+  from = "/*"
+  to = "/boutique/"
+  status = 302

@@ -12,13 +12,18 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// En prod le shop est monté sous /boutique/ (cf. vite.config.ts).
+// Vite injecte import.meta.env.BASE_URL avec '/' en dev et '/boutique/' en build.
+// React Router veut un basename sans slash final.
+const ROUTER_BASENAME = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <CartProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename={ROUTER_BASENAME}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/panier" element={<Cart />} />

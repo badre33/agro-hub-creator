@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +72,15 @@ const Login = () => {
       toast({
         title: "Mot de passe trop court",
         description: "Le mot de passe doit contenir au moins 6 caractères.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isSignUp && password !== confirmPassword) {
+      toast({
+        title: "Les mots de passe ne correspondent pas",
+        description: "Veuillez retaper le même mot de passe dans les deux champs.",
         variant: "destructive",
       });
       return;
@@ -226,6 +236,29 @@ const Login = () => {
               )}
             </div>
 
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">
+                  Confirmer le mot de passe
+                </Label>
+                <Input
+                  id="confirm-password"
+                  name="confirm-password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={loading}
+                  className="h-11"
+                  // Deuxième champ "new-password" : c'est la combinaison qui
+                  // déclenche le générateur de mot de passe de Chrome/Safari.
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+              </div>
+            )}
+
             <Button type="submit" className="w-full h-11" disabled={loading}>
               {loading ? (
                 <>
@@ -246,6 +279,7 @@ const Login = () => {
               onClick={() => {
                 setIsSignUp((v) => !v);
                 setShowPassword(false);
+                setConfirmPassword("");
               }}
               className="text-sm text-primary hover:underline"
               disabled={loading}

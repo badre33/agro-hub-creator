@@ -12,8 +12,39 @@ import {
   UserPlus,
   Eye,
   EyeOff,
+  Wand2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+/**
+ * Génère un mot de passe robuste de 16 caractères, garanti d'inclure :
+ * - au moins 1 minuscule, 1 majuscule, 1 chiffre, 1 caractère spécial
+ * - utilise window.crypto pour de l'aléatoire cryptographique
+ */
+function generateStrongPassword(length = 16): string {
+  const lower = "abcdefghijkmnopqrstuvwxyz"; // sans l ambigu
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // sans I et O ambigus
+  const digits = "23456789"; // sans 0 et 1 ambigus
+  const symbols = "!@#$%&*?-_+=";
+  const all = lower + upper + digits + symbols;
+
+  const pick = (set: string) =>
+    set[crypto.getRandomValues(new Uint32Array(1))[0] % set.length];
+
+  // 1 caractère de chaque catégorie, puis remplissage aléatoire
+  const required = [pick(lower), pick(upper), pick(digits), pick(symbols)];
+  const rest = Array.from({ length: length - required.length }, () => pick(all));
+  const chars = [...required, ...rest];
+
+  // Mélange Fisher-Yates avec crypto
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join("");
+}
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,8 +53,50 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [justCopied, setJustCopied] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleGeneratePassword = async () => {
+    const generated = generateStrongPassword(16);
+    setPassword(generated);
+    setConfirmPassword(generated);
+    setShowPassword(true);
+
+    // Copie automatique dans le presse-papier pour que l'utilisateur puisse
+    // le coller dans son gestionnaire de mots de passe (1Password, etc.)
+    try {
+      await navigator.clipboard.writeText(generated);
+      setJustCopied(true);
+      setTimeout(() => setJustCopied(false), 2500);
+      toast({
+        title: "Mot de passe généré ✨",
+        description:
+          "Copié dans le presse-papier. Sauvegarde-le maintenant dans ton gestionnaire de mots de passe.",
+      });
+    } catch {
+      toast({
+        title: "Mot de passe généré ✨",
+        description:
+          "Affiché ci-dessous. Note-le ou copie-le manuellement avant de valider.",
+      });
+    }
+  };
+
+  const handleCopyPassword = async () => {
+    if (!password) return;
+    try {
+      await navigator.clipboard.writeText(password);
+      setJustCopied(true);
+      setTimeout(() => setJustCopied(false), 2000);
+    } catch {
+      toast({
+        title: "Copie impossible",
+        description: "Copie le mot de passe manuellement.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     // Check if already logged in
@@ -191,7 +264,42 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Mot de passe</Label>
+                {isSignUp && (
+                  <div className="flex items-center gap-1">
+                    {password && (
+                      <button
+                        type="button"
+                        onClick={handleCopyPassword}
+                        disabled={loading}
+                        className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-muted transition-colors"
+                      >
+                        {justCopied ? (
+                          <>
+                            <Check className="h-3 w-3" />
+                            Copié
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3" />
+                            Copier
+                          </>
+                        )}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleGeneratePassword}
+                      disabled={loading}
+                      className="text-xs text-primary hover:underline inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors font-medium"
+                    >
+                      <Wand2 className="h-3 w-3" />
+                      Générer un mot de passe fort
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="relative">
                 <Input
                   id="password"

@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Minus, Plus, ShoppingCart, Trash2, MapPin, Loader2 } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Trash2, MapPin, Loader2, User } from "lucide-react";
 import { allProducts } from "@/data/products";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const Cart = () => {
   const { getCartItems, updateQuantity, clearCart, cartCount } = useCart();
@@ -18,7 +19,23 @@ const Cart = () => {
   const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
   const { toast } = useToast();
+
+  // Récupère l'utilisateur connecté (s'il y en a un) pour lier sa commande à son compte
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUser(user);
+      // Si l'utilisateur a un email, on le suggère par défaut côté téléphone seulement si vide
+      if (user?.user_metadata?.full_name && !customerName) {
+        setCustomerName(user.user_metadata.full_name);
+      }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => setCurrentUser(session?.user ?? null)
+    );
+    return () => subscription.unsubscribe();
+  }, []);
 
   const total = cartItems.reduce((sum, item) => sum + item.total, 0);
 
@@ -37,7 +54,7 @@ const Cart = () => {
     try {
       const orderId = crypto.randomUUID();
 
-      // 1. Create the order
+      // 1. Create the order — lie au user_id si connecté (pour /mes-commandes)
       const { error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -47,6 +64,7 @@ const Cart = () => {
           delivery_city: city.trim(),
           total_amount: total,
           notes: notes.trim() || null,
+          user_id: currentUser?.id ?? null,
         });
 
       if (orderError) throw orderError;
@@ -96,8 +114,10 @@ const Cart = () => {
       setNotes("");
 
       toast({
-        title: "Commande envoyée! ✅",
-        description: `Votre commande #${orderId.slice(0, 8)} a été enregistrée avec succès. Nous vous contacterons bientôt.`,
+        title: "Commande envoyée ✅",
+        description: currentUser
+          ? `Votre commande #${orderId.slice(0, 8)} est enregistrée. Retrouvez-la dans "Mes commandes".`
+          : `Votre commande #${orderId.slice(0, 8)} est enregistrée. Nous vous contacterons bientôt. Astuce : créez un compte pour suivre vos commandes.`,
       });
     } catch (error: any) {
       console.error("Order error:", error);

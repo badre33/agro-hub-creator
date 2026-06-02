@@ -125,7 +125,8 @@ const Login = () => {
     if (isAdminResult) {
       navigate("/admin");
     } else {
-      navigate("/");
+      // Client connecté : on l'envoie vers son espace personnel
+      navigate("/mes-commandes");
     }
   };
 
@@ -234,7 +235,9 @@ const Login = () => {
               {isSignUp ? "Créer un compte" : "Connexion"}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {isSignUp ? "Inscription administrateur" : "Accès administrateur"}
+              {isSignUp
+                ? "Pour suivre vos commandes Broccagri"
+                : "Accédez à vos commandes et votre compte"}
             </p>
           </div>
 
@@ -253,7 +256,7 @@ const Login = () => {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="admin@example.com"
+                placeholder="votre@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}

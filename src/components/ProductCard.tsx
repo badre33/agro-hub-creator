@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Flame, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import placeholderImg from "@/assets/product-placeholder.jpg";
+
+export type ProductBadge = "promo" | "new";
 
 export interface Product {
   id: number;
@@ -10,6 +12,9 @@ export interface Product {
   price: number;
   image: string;
   unit: string;
+  badge?: ProductBadge;
+  // Si présent, le produit est en promo : price = nouveau prix, oldPrice = ancien
+  oldPrice?: number;
 }
 
 interface ProductCardProps {
@@ -41,6 +46,17 @@ export const ProductCard = ({ product, onQuantityChange }: ProductCardProps) => 
 
   return (
     <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 animate-fade-in hover:scale-[1.02] sm:hover:scale-[1.03] border-2 hover:border-primary/30 relative">
+      {/* Badge Promo / Nouveau en haut à gauche */}
+      {product.badge === "promo" && (
+        <div className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full shadow-md">
+          <Flame className="h-3 w-3" /> Promo
+        </div>
+      )}
+      {product.badge === "new" && (
+        <div className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-amber-400 text-amber-900 text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full shadow-md">
+          <Sparkles className="h-3 w-3" /> Nouveau
+        </div>
+      )}
       <CardContent className="p-0">
         <div className="aspect-square overflow-hidden bg-gradient-to-br from-muted to-muted/50 relative flex items-center justify-center">
           <img
@@ -66,9 +82,14 @@ export const ProductCard = ({ product, onQuantityChange }: ProductCardProps) => 
         </div>
         <div className="p-2 sm:p-3 md:p-4">
           <h3 className="font-bold text-sm sm:text-base md:text-lg mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">{product.name}</h3>
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-2 flex-wrap">
             <p className="text-primary font-bold text-base sm:text-lg md:text-xl">{product.price.toFixed(2)} DH</p>
             <span className="text-muted-foreground text-xs sm:text-sm">/{product.unit}</span>
+            {product.oldPrice && product.oldPrice > product.price && (
+              <span className="text-xs sm:text-sm text-muted-foreground line-through">
+                {product.oldPrice.toFixed(2)} DH
+              </span>
+            )}
           </div>
         </div>
       </CardContent>

@@ -34,6 +34,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from "recharts";
 import type { Database } from "@/integrations/supabase/types";
 
 type OrderStatus = Database["public"]["Enums"]["order_status"];
@@ -155,9 +156,16 @@ const Admin = () => {
         )
       );
 
+      // Notification email au client (non bloquant)
+      supabase.functions
+        .invoke("send-status-update", {
+          body: { order_id: orderId, new_status: newStatus },
+        })
+        .catch((err) => console.warn("Notification email échouée (non bloquant):", err));
+
       toast({
         title: "Statut mis à jour",
-        description: `Commande #${orderId.slice(0, 8)} → ${statusLabels[newStatus]}`,
+        description: `Commande #${orderId.slice(0, 8)} → ${statusLabels[newStatus]}. Email client envoyé.`,
       });
     } catch (error: any) {
       console.error("Update status error:", error);
@@ -424,6 +432,29 @@ const AdminBusinessStats = ({ orders }: { orders: OrderWithItems[] }) => {
     };
   }, [orders]);
 
+  // Données pour le graphique : CA par jour sur les 7 derniers jours
+  const chartData = useMemo(() => {
+    const days: { label: string; date: Date; revenue: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - i);
+      days.push({
+        label: d.toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit" }),
+        date: d,
+        revenue: 0,
+      });
+    }
+    const validOrders = orders.filter((o) => o.status !== "cancelled");
+    for (const o of validOrders) {
+      const d = new Date(o.created_at);
+      d.setHours(0, 0, 0, 0);
+      const day = days.find((x) => x.date.getTime() === d.getTime());
+      if (day) day.revenue += Number(o.total_amount || 0);
+    }
+    return days.map(({ label, revenue }) => ({ label, revenue: Math.round(revenue) }));
+  }, [orders]);
+
   const fmtDH = (n: number) =>
     n.toLocaleString("fr-MA", { maximumFractionDigits: 2 }) + " DH";
 
@@ -506,6 +537,38 @@ const AdminBusinessStats = ({ orders }: { orders: OrderWithItems[] }) => {
           </div>
         </Card>
       </div>
+
+      {/* Mini graphique CA sur les 7 derniers jours */}
+      <Card className="p-4 mt-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold">CA des 7 derniers jours</h3>
+          <span className="text-xs text-muted-foreground">
+            Total : {fmtDH(chartData.reduce((s, d) => s + d.revenue, 0))}
+          </span>
+        </div>
+        <div className="h-32 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData}>
+              <XAxis
+                dataKey="label"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip
+                cursor={{ fill: "hsl(var(--muted) / 0.4)" }}
+                contentStyle={{
+                  borderRadius: 8,
+                  border: "1px solid hsl(var(--border))",
+                  fontSize: 12,
+                }}
+                formatter={(value: number) => [`${value} DH`, "CA"]}
+              />
+              <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
     </div>
   );
 };

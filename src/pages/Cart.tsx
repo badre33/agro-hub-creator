@@ -39,6 +39,9 @@ const Cart = () => {
   const [isLocating, setIsLocating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
+  const [savedAddresses, setSavedAddresses] = useState<
+    { id: string; label: string; address: string; city: string }[]
+  >([]);
   const { toast } = useToast();
 
   // Récupère l'utilisateur connecté (s'il y en a un) pour pré-remplir le formulaire
@@ -52,9 +55,14 @@ const Cart = () => {
         setCustomerName(md.full_name || md.name || "");
       }
       if (!customerPhone && md.phone) setCustomerPhone(md.phone);
-      // Adresse principale = première du carnet d'adresses si pas encore tapée
-      if (Array.isArray(md.addresses) && md.addresses.length > 0) {
-        const primary = md.addresses[0];
+
+      // Carnet d'adresses pour le sélecteur visuel
+      const addrs = Array.isArray(md.addresses) ? md.addresses : [];
+      setSavedAddresses(addrs);
+
+      // Adresse principale = première du carnet si pas encore tapée
+      if (addrs.length > 0) {
+        const primary = addrs[0];
         if (!address && primary?.address) setAddress(primary.address);
         if (!city && primary?.city) setCity(primary.city);
       }
@@ -437,6 +445,29 @@ const Cart = () => {
                       <Home className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                       Adresse de livraison *
                     </Label>
+                    {/* Sélecteur d'adresse depuis le carnet (visible si connecté + adresses sauvegardées) */}
+                    {savedAddresses.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {savedAddresses.map((a) => (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => {
+                              setAddress(a.address);
+                              setCity(a.city);
+                            }}
+                            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                              address === a.address && city === a.city
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background border-border hover:bg-muted"
+                            }`}
+                            title={`${a.address}, ${a.city}`}
+                          >
+                            📍 {a.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <Input
                       id="address"
                       type="text"

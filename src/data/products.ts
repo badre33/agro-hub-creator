@@ -90,6 +90,41 @@ export interface ProductWithCategory extends Product {
   category: string;
 }
 
+/**
+ * Convertit un nom de produit en slug URL-safe (kebab-case, sans accents).
+ * Ex: "Pomme de terre Rouge" → "pomme-de-terre-rouge"
+ */
+export const slugify = (name: string): string =>
+  name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // accents
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+/**
+ * Trouve un produit par son slug.
+ */
+export const findProductBySlug = (
+  slug: string
+): ProductWithCategory | undefined =>
+  allProducts.find((p) => slugify(p.name) === slug);
+
+/**
+ * Génère une description marketing simple à partir des métadonnées du produit
+ * (le catalogue n'a pas de descriptions stockées, c'est mieux que rien).
+ */
+export const generateProductDescription = (p: ProductWithCategory): string => {
+  const categoryLabels: Record<string, string> = {
+    legumes: "légume frais",
+    fruits: "fruit de saison",
+    salades: "verdure croquante",
+    herbes: "herbe aromatique",
+  };
+  const cat = categoryLabels[p.category] || "produit";
+  return `${p.name} est un ${cat} sélectionné avec soin par Broccagri auprès de producteurs marocains de confiance. Récolté à maturité, livré rapidement pour garantir une fraîcheur irréprochable. Idéal pour vos préparations quotidiennes ou pour vos commandes professionnelles en grande quantité.`;
+};
+
 export const allProducts: ProductWithCategory[] = [
   // Légumes
   { id: 1, name: "Artichaud", price: 10, image: artichaud, unit: "kg", category: "legumes" },

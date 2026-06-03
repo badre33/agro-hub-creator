@@ -30,7 +30,14 @@ import {
   ShoppingCart,
   Users,
   Trophy,
+  Search,
+  Download,
+  Boxes,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { allProducts } from "@/data/products";
+import { useStockOverrides } from "@/hooks/useStock";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -68,8 +75,74 @@ const Admin = () => {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [orderSearch, setOrderSearch] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Filtre les commandes selon la recherche admin (numéro, nom, ville, tel)
+  const visibleOrders = useMemo(() => {
+    const s = orderSearch.trim().toLowerCase();
+    if (!s) return orders;
+    return orders.filter(
+      (o) =>
+        o.id.toLowerCase().includes(s) ||
+        o.customer_name?.toLowerCase().includes(s) ||
+        o.customer_phone?.toLowerCase().includes(s) ||
+        o.delivery_city?.toLowerCase().includes(s)
+    );
+  }, [orders, orderSearch]);
+
+  const exportCsv = () => {
+    const rows = [
+      [
+        "ID",
+        "Date",
+        "Client",
+        "Email",
+        "Telephone",
+        "Adresse",
+        "Ville",
+        "Statut",
+        "Total (DH)",
+        "Notes",
+        "Date livraison souhaitee",
+      ],
+      ...orders.map((o) => [
+        o.id.slice(0, 8).toUpperCase(),
+        new Date(o.created_at).toLocaleString("fr-FR"),
+        o.customer_name || "",
+        (o as any).customer_email || "",
+        o.customer_phone || "",
+        (o as any).delivery_address || "",
+        o.delivery_city || "",
+        statusLabels[o.status as OrderStatus] || o.status,
+        Number(o.total_amount || 0).toFixed(2),
+        (o.notes || "").replace(/\n/g, " "),
+        (o as any).delivery_date || "",
+      ]),
+    ];
+    const csv = rows
+      .map((r) =>
+        r
+          .map((cell) => {
+            const s = String(cell ?? "");
+            return /[,;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+          })
+          .join(",")
+      )
+      .join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `broccagri-commandes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({
+      title: "Export téléchargé ✓",
+      description: `${orders.length} commande(s) exportée(s)`,
+    });
+  };
 
   useEffect(() => {
     checkAdminAccess();
@@ -252,6 +325,31 @@ const Admin = () => {
           ))}
         </div>
 
+        {/* Gestion de stock (collapsible) */}
+        <AdminStockManager />
+
+        {/* Barre de recherche + export + actualiser */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-3">
+          <div className="relative flex-1">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher commandes (numéro, nom, ville, téléphone)..."
+              value={orderSearch}
+              onChange={(e) => setOrderSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button variant="outline" onClick={exportCsv} disabled={orders.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
+        {orderSearch && (
+          <p className="text-xs text-muted-foreground mb-2">
+            {visibleOrders.length} commande(s) sur {orders.length}
+          </p>
+        )}
+
         {/* Orders Table */}
         <Card className="overflow-hidden">
           <Table>
@@ -273,14 +371,14 @@ const Admin = () => {
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                   </TableCell>
                 </TableRow>
-              ) : orders.length === 0 ? (
+              ) : visibleOrders.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Aucune commande
+                    {orderSearch ? "Aucune commande ne correspond à la recherche" : "Aucune commande"}
                   </TableCell>
                 </TableRow>
               ) : (
-                orders.map((order) => (
+                visibleOrders.map((order) => (
                   <>
                     <TableRow 
                       key={order.id}
@@ -570,6 +668,111 @@ const AdminBusinessStats = ({ orders }: { orders: OrderWithItems[] }) => {
         </div>
       </Card>
     </div>
+  );
+};
+
+/**
+ * Section pliable pour gérer les ruptures de stock par produit.
+ * Lit/écrit dans la table public.product_stock_overrides.
+ */
+const AdminStockManager = () => {
+  const { outOfStock, reload } = useStockOverrides();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [busy, setBusy] = useState<number | null>(null);
+  const { toast } = useToast();
+
+  const toggle = async (productId: number, isOutOfStock: boolean) => {
+    setBusy(productId);
+    try {
+      const { error } = await supabase
+        .from("product_stock_overrides")
+        .upsert({ product_id: productId, in_stock: !isOutOfStock, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      await reload();
+    } catch (e: any) {
+      toast({
+        title: "Erreur",
+        description: e.message || "Impossible de mettre à jour le stock.",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const filtered = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    if (!s) return allProducts;
+    return allProducts.filter((p) => p.name.toLowerCase().includes(s));
+  }, [search]);
+
+  return (
+    <Card className="mb-6 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-100 rounded-lg">
+            <Boxes className="h-5 w-5 text-amber-700" />
+          </div>
+          <div className="text-left">
+            <div className="font-semibold">Gestion du stock</div>
+            <div className="text-xs text-muted-foreground">
+              {outOfStock.size === 0
+                ? "Aucun produit en rupture"
+                : `${outOfStock.size} produit${outOfStock.size > 1 ? "s" : ""} en rupture`}
+            </div>
+          </div>
+        </div>
+        {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </button>
+      {open && (
+        <div className="border-t p-4">
+          <div className="relative mb-3">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un produit..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="max-h-96 overflow-y-auto border rounded-lg divide-y">
+            {filtered.map((p) => {
+              const isOOS = outOfStock.has(p.id);
+              return (
+                <div
+                  key={p.id}
+                  className={`flex items-center justify-between gap-3 px-3 py-2 ${isOOS ? "bg-red-50" : ""}`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate">{p.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {p.category} · {p.price} DH / {p.unit}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span
+                      className={`text-xs font-medium ${isOOS ? "text-red-600" : "text-green-600"}`}
+                    >
+                      {isOOS ? "Rupture" : "En stock"}
+                    </span>
+                    <Switch
+                      checked={!isOOS}
+                      onCheckedChange={() => toggle(p.id, isOOS)}
+                      disabled={busy === p.id}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </Card>
   );
 };
 

@@ -1,8 +1,18 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Minus, Plus, Flame, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import placeholderImg from "@/assets/product-placeholder.jpg";
+
+// Génère un slug URL-safe à partir du nom (sans dépendance circulaire)
+const slugify = (s: string): string =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 
 export type ProductBadge = "promo" | "new";
 
@@ -20,9 +30,10 @@ export interface Product {
 interface ProductCardProps {
   product: Product;
   onQuantityChange: (productId: number, quantity: number) => void;
+  outOfStock?: boolean;
 }
 
-export const ProductCard = ({ product, onQuantityChange }: ProductCardProps) => {
+export const ProductCard = ({ product, onQuantityChange, outOfStock = false }: ProductCardProps) => {
   const [quantity, setQuantity] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -45,20 +56,26 @@ export const ProductCard = ({ product, onQuantityChange }: ProductCardProps) => 
   };
 
   return (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 animate-fade-in hover:scale-[1.02] sm:hover:scale-[1.03] border-2 hover:border-primary/30 relative">
-      {/* Badge Promo / Nouveau en haut à gauche */}
-      {product.badge === "promo" && (
+    <Card className={`group overflow-hidden hover:shadow-xl transition-all duration-300 animate-fade-in hover:scale-[1.02] sm:hover:scale-[1.03] border-2 hover:border-primary/30 relative ${outOfStock ? "opacity-60 grayscale" : ""}`}>
+      {/* Badge Promo / Nouveau / Rupture en haut à gauche */}
+      {outOfStock ? (
+        <div className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-gray-700 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full shadow-md">
+          Rupture
+        </div>
+      ) : product.badge === "promo" ? (
         <div className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full shadow-md">
           <Flame className="h-3 w-3" /> Promo
         </div>
-      )}
-      {product.badge === "new" && (
+      ) : product.badge === "new" ? (
         <div className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 bg-amber-400 text-amber-900 text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full shadow-md">
           <Sparkles className="h-3 w-3" /> Nouveau
         </div>
-      )}
+      ) : null}
       <CardContent className="p-0">
-        <div className="aspect-square overflow-hidden bg-gradient-to-br from-muted to-muted/50 relative flex items-center justify-center">
+        <Link
+          to={`/produit/${slugify(product.name)}`}
+          className="block aspect-square overflow-hidden bg-gradient-to-br from-muted to-muted/50 relative flex items-center justify-center"
+        >
           <img
             src={product.image}
             alt={product.name}
@@ -79,9 +96,11 @@ export const ProductCard = ({ product, onQuantityChange }: ProductCardProps) => 
               </div>
             </div>
           )}
-        </div>
+        </Link>
         <div className="p-2 sm:p-3 md:p-4">
-          <h3 className="font-bold text-sm sm:text-base md:text-lg mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">{product.name}</h3>
+          <Link to={`/produit/${slugify(product.name)}`}>
+            <h3 className="font-bold text-sm sm:text-base md:text-lg mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">{product.name}</h3>
+          </Link>
           <div className="flex items-baseline gap-2 flex-wrap">
             <p className="text-primary font-bold text-base sm:text-lg md:text-xl">{product.price.toFixed(2)} DH</p>
             <span className="text-muted-foreground text-xs sm:text-sm">/{product.unit}</span>
@@ -99,7 +118,7 @@ export const ProductCard = ({ product, onQuantityChange }: ProductCardProps) => 
             variant="outline"
             size="icon"
             onClick={handleDecrement}
-            disabled={quantity === 0}
+            disabled={quantity === 0 || outOfStock}
             className="rounded-full hover:bg-destructive/10 hover:border-destructive hover:text-destructive transition-all h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 flex-shrink-0"
           >
             <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -115,6 +134,7 @@ export const ProductCard = ({ product, onQuantityChange }: ProductCardProps) => 
           <Button
             size="icon"
             onClick={handleIncrement}
+            disabled={outOfStock}
             className={`rounded-full hover:shadow-lg hover:scale-110 transition-all h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 flex-shrink-0 ${
               isAdding ? 'scale-90' : ''
             }`}

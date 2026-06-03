@@ -8,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { allProducts } from "@/data/products";
+import { useStockOverrides } from "@/hooks/useStock";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("legumes");
   const [search, setSearch] = useState("");
   const { updateQuantity, cartCount } = useCart();
+  const { outOfStock } = useStockOverrides();
 
   // Si une recherche est active, on ignore la catégorie et on cherche dans TOUT le catalogue.
   // Sinon, on filtre par catégorie.
@@ -69,6 +71,7 @@ const Index = () => {
       <ProductGrid
         products={filteredProducts}
         onQuantityChange={updateQuantity}
+        outOfStock={outOfStock}
       />
       <ValidateButton cartCount={cartCount} />
 

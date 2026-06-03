@@ -4,7 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Minus, Plus, ShoppingCart, Trash2, MapPin, Loader2, User } from "lucide-react";
+import {
+  ArrowLeft,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash2,
+  MapPin,
+  Loader2,
+  User,
+  Mail,
+  Home,
+  Navigation,
+  Loader,
+} from "lucide-react";
 import { allProducts } from "@/data/products";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,9 +28,14 @@ const Cart = () => {
   const { getCartItems, updateQuantity, clearCart, cartCount } = useCart();
   const cartItems = getCartItems(allProducts);
   const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
   const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
   const { toast } = useToast();
@@ -26,24 +44,79 @@ const Cart = () => {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUser(user);
-      // Si l'utilisateur a un email, on le suggère par défaut côté téléphone seulement si vide
+      // Pré-remplissage à partir du compte connecté
+      if (user?.email && !customerEmail) setCustomerEmail(user.email);
       if (user?.user_metadata?.full_name && !customerName) {
         setCustomerName(user.user_metadata.full_name);
       }
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => setCurrentUser(session?.user ?? null)
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user ?? null);
+      if (session?.user?.email && !customerEmail) {
+        setCustomerEmail(session.user.email);
+      }
+    });
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleGeolocate = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Géolocalisation indisponible",
+        description: "Votre navigateur ne supporte pas la géolocalisation.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLat(pos.coords.latitude);
+        setLng(pos.coords.longitude);
+        setIsLocating(false);
+        toast({
+          title: "Position enregistrée ✓",
+          description: `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)} — l'adresse exacte aidera le livreur.`,
+        });
+      },
+      (err) => {
+        setIsLocating(false);
+        toast({
+          title: "Géolocalisation refusée",
+          description:
+            err.code === 1
+              ? "Tu as refusé la permission. Tu peux toujours taper ton adresse manuellement."
+              : "Impossible d'obtenir la position. Tape ton adresse manuellement.",
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const total = cartItems.reduce((sum, item) => sum + item.total, 0);
 
   const handleSubmitOrder = async () => {
-    if (!city.trim() || !customerName.trim() || !customerPhone.trim()) {
+    if (
+      !city.trim() ||
+      !customerName.trim() ||
+      !customerPhone.trim() ||
+      !address.trim()
+    ) {
       toast({
         title: "Informations manquantes",
-        description: "Veuillez remplir tous les champs obligatoires",
+        description:
+          "Nom, téléphone, adresse et ville sont obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (customerEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())) {
+      toast({
+        title: "Email invalide",
+        description: "Vérifie ton adresse email ou laisse le champ vide.",
         variant: "destructive",
       });
       return;
@@ -60,8 +133,12 @@ const Cart = () => {
         .insert({
           id: orderId,
           customer_name: customerName.trim(),
+          customer_email: customerEmail.trim() || null,
           customer_phone: customerPhone.trim(),
+          delivery_address: address.trim(),
           delivery_city: city.trim(),
+          delivery_lat: lat,
+          delivery_lng: lng,
           total_amount: total,
           notes: notes.trim() || null,
           user_id: currentUser?.id ?? null,
@@ -85,15 +162,19 @@ const Cart = () => {
 
       if (itemsError) throw itemsError;
 
-      // 3. Send email notification
+      // 3. Send email notification (admin + client si email fourni)
       const { error: emailError } = await supabase.functions.invoke(
         "send-order-email",
         {
           body: {
             order_id: orderId,
             customer_name: customerName.trim(),
+            customer_email: customerEmail.trim() || undefined,
             customer_phone: customerPhone.trim(),
+            delivery_address: address.trim(),
             delivery_city: city.trim(),
+            delivery_lat: lat ?? undefined,
+            delivery_lng: lng ?? undefined,
             total_amount: total,
             items: orderItems,
             notes: notes.trim() || undefined,
@@ -292,9 +373,70 @@ const Cart = () => {
                   </div>
 
                   <div className="space-y-2">
+                    <Label
+                      htmlFor="customerEmail"
+                      className="flex items-center gap-2 font-semibold text-sm sm:text-base"
+                    >
+                      <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                      Email <span className="text-muted-foreground font-normal">(optionnel — pour recevoir la confirmation)</span>
+                    </Label>
+                    <Input
+                      id="customerEmail"
+                      type="email"
+                      placeholder="votre@email.com"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="address"
+                      className="flex items-center gap-2 font-semibold text-sm sm:text-base"
+                    >
+                      <Home className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
+                      Adresse de livraison *
+                    </Label>
+                    <Input
+                      id="address"
+                      type="text"
+                      placeholder="Rue, n°, quartier, étage..."
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGeolocate}
+                      disabled={isLocating || isSubmitting}
+                      className="w-full mt-1 rounded-lg text-xs sm:text-sm h-9 hover:bg-primary/10 hover:border-primary"
+                    >
+                      {isLocating ? (
+                        <>
+                          <Loader className="h-3 w-3 mr-2 animate-spin" />
+                          Récupération de la position...
+                        </>
+                      ) : lat && lng ? (
+                        <>
+                          <Navigation className="h-3 w-3 mr-2 text-primary" />
+                          Position enregistrée ({lat.toFixed(4)}, {lng.toFixed(4)})
+                        </>
+                      ) : (
+                        <>
+                          <Navigation className="h-3 w-3 mr-2" />
+                          Partager ma position GPS (optionnel, aide le livreur)
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="city" className="flex items-center gap-2 font-semibold text-sm sm:text-base">
                       <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
-                      Ville de livraison *
+                      Ville *
                     </Label>
                     <Input
                       id="city"
@@ -341,7 +483,7 @@ const Cart = () => {
                   size="lg" 
                   className="w-full rounded-full mb-2 sm:mb-3 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 font-semibold text-sm sm:text-base py-5 sm:py-6"
                   onClick={handleSubmitOrder}
-                  disabled={isSubmitting || !city.trim() || !customerName.trim() || !customerPhone.trim()}
+                  disabled={isSubmitting || !city.trim() || !customerName.trim() || !customerPhone.trim() || !address.trim()}
                 >
                   {isSubmitting ? (
                     <>

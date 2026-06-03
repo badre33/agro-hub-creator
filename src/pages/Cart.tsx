@@ -40,23 +40,34 @@ const Cart = () => {
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
   const { toast } = useToast();
 
-  // Récupère l'utilisateur connecté (s'il y en a un) pour lier sa commande à son compte
+  // Récupère l'utilisateur connecté (s'il y en a un) pour pré-remplir le formulaire
+  // depuis son profil et lier sa commande à son compte.
   useEffect(() => {
+    const fillFromUser = (u: SupabaseUser | null) => {
+      if (!u) return;
+      const md = u.user_metadata || {};
+      if (u.email && !customerEmail) setCustomerEmail(u.email);
+      if (!customerName) {
+        setCustomerName(md.full_name || md.name || "");
+      }
+      if (!customerPhone && md.phone) setCustomerPhone(md.phone);
+      // Adresse principale = première du carnet d'adresses si pas encore tapée
+      if (Array.isArray(md.addresses) && md.addresses.length > 0) {
+        const primary = md.addresses[0];
+        if (!address && primary?.address) setAddress(primary.address);
+        if (!city && primary?.city) setCity(primary.city);
+      }
+    };
+
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUser(user);
-      // Pré-remplissage à partir du compte connecté
-      if (user?.email && !customerEmail) setCustomerEmail(user.email);
-      if (user?.user_metadata?.full_name && !customerName) {
-        setCustomerName(user.user_metadata.full_name);
-      }
+      fillFromUser(user);
     });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setCurrentUser(session?.user ?? null);
-      if (session?.user?.email && !customerEmail) {
-        setCustomerEmail(session.user.email);
-      }
+      fillFromUser(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -187,7 +198,33 @@ const Cart = () => {
         // Continue even if email fails
       }
 
-      // 4. Clear cart and show success
+      // 4. Si le client est connecté, on enrichit son profil avec ce qu'il vient de remplir
+      //    (utile pour les comptes créés en SSO sans nom/tel, ou pour 1ère commande).
+      if (currentUser) {
+        const md = currentUser.user_metadata || {};
+        const updates: Record<string, unknown> = {};
+        if (!md.full_name && customerName.trim()) updates.full_name = customerName.trim();
+        if (!md.phone && customerPhone.trim()) updates.phone = customerPhone.trim();
+        const existingAddrs = Array.isArray(md.addresses) ? md.addresses : [];
+        // Si carnet d'adresses vide, on ajoute celle utilisée comme première adresse "Principale"
+        if (existingAddrs.length === 0 && address.trim() && city.trim()) {
+          updates.addresses = [
+            {
+              id: crypto.randomUUID(),
+              label: "Principale",
+              address: address.trim(),
+              city: city.trim(),
+            },
+          ];
+        }
+        if (Object.keys(updates).length > 0) {
+          await supabase.auth.updateUser({ data: { ...md, ...updates } }).catch((err) => {
+            console.warn("Auto-save profil échoué (non bloquant):", err);
+          });
+        }
+      }
+
+      // 5. Clear cart and show success
       clearCart();
       setCity("");
       setCustomerName("");

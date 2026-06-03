@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import Cart from "./pages/Cart";
@@ -11,6 +11,15 @@ import Login from "./pages/Login";
 import MyOrders from "./pages/MyOrders";
 import MyProfile from "./pages/MyProfile";
 import NotFound from "./pages/NotFound";
+import { WhatsAppFab } from "@/components/WhatsAppFab";
+
+// Affiche le bouton WhatsApp sur les pages publiques mais pas sur admin/login
+const FloatingChat = () => {
+  const { pathname } = useLocation();
+  const hideOn = ["/admin", "/login"];
+  if (hideOn.some((p) => pathname.startsWith(p))) return null;
+  return <WhatsAppFab />;
+};
 
 const queryClient = new QueryClient();
 
@@ -35,6 +44,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <FloatingChat />
         </BrowserRouter>
       </CartProvider>
     </TooltipProvider>

@@ -10,6 +10,8 @@ import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import MyOrders from "./pages/MyOrders";
 import MyProfile from "./pages/MyProfile";
+import AboutPage from "./pages/AboutPage";
+import TermsPage from "./pages/TermsPage";
 import NotFound from "./pages/NotFound";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
 
@@ -41,6 +43,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/mes-commandes" element={<MyOrders />} />
             <Route path="/mon-profil" element={<MyProfile />} />
+            <Route path="/a-propos" element={<AboutPage />} />
+            <Route path="/cgv" element={<TermsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

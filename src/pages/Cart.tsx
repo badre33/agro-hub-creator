@@ -35,6 +35,7 @@ const Cart = () => {
   const [notes, setNotes] = useState("");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const [deliveryDate, setDeliveryDate] = useState("");
   const [isLocating, setIsLocating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
@@ -152,6 +153,7 @@ const Cart = () => {
           delivery_lng: lng,
           total_amount: total,
           notes: notes.trim() || null,
+          delivery_date: deliveryDate || null,
           user_id: currentUser?.id ?? null,
         });
 
@@ -481,6 +483,23 @@ const Cart = () => {
                       placeholder="Ex: Casablanca, Rabat..."
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
+                      className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="deliveryDate"
+                      className="font-semibold text-sm sm:text-base"
+                    >
+                      Date de livraison souhaitée <span className="text-muted-foreground font-normal">(optionnel)</span>
+                    </Label>
+                    <Input
+                      id="deliveryDate"
+                      type="date"
+                      value={deliveryDate}
+                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
                       className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
                     />
                   </div>

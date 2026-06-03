@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LogOut, Package, RefreshCw, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import {
+  LogOut,
+  Package,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  TrendingUp,
+  ShoppingCart,
+  Users,
+  Trophy,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -216,7 +227,10 @@ const Admin = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        {/* Stats */}
+        {/* Stats business : CA mois, panier moyen, clients, top produit */}
+        <AdminBusinessStats orders={orders} />
+
+        {/* Stats statuts */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {(["pending", "confirmed", "preparing", "delivered"] as OrderStatus[]).map((status) => (
             <Card key={status} className="p-4">
@@ -350,6 +364,146 @@ const Admin = () => {
               )}
             </TableBody>
           </Table>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Carte de stats business affichée en haut du back-office.
+ * Computes : CA du mois en cours, panier moyen, nb commandes mois, top produit, nb clients uniques.
+ */
+const AdminBusinessStats = ({ orders }: { orders: OrderWithItems[] }) => {
+  const stats = useMemo(() => {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+    // On exclut les commandes annulées pour le CA et panier moyen
+    const validOrders = orders.filter((o) => o.status !== "cancelled");
+    const monthOrders = validOrders.filter(
+      (o) => new Date(o.created_at).getTime() >= monthStart
+    );
+
+    const monthRevenue = monthOrders.reduce(
+      (sum, o) => sum + Number(o.total_amount || 0),
+      0
+    );
+    const avgBasket =
+      monthOrders.length > 0 ? monthRevenue / monthOrders.length : 0;
+
+    // Top produit (toutes périodes) : compte les quantités cumulées par nom
+    const productQty = new Map<string, number>();
+    for (const o of validOrders) {
+      for (const item of o.order_items || []) {
+        const prev = productQty.get(item.product_name) || 0;
+        productQty.set(item.product_name, prev + Number(item.quantity));
+      }
+    }
+    let topProduct = "—";
+    let topProductQty = 0;
+    for (const [name, qty] of productQty.entries()) {
+      if (qty > topProductQty) {
+        topProductQty = qty;
+        topProduct = name;
+      }
+    }
+
+    // Clients uniques : par téléphone (puisque email peut être null pour invités)
+    const uniqClients = new Set(
+      validOrders.map((o) => o.customer_phone).filter(Boolean)
+    );
+
+    return {
+      monthRevenue,
+      avgBasket,
+      monthOrdersCount: monthOrders.length,
+      topProduct,
+      topProductQty,
+      uniqueClients: uniqClients.size,
+    };
+  }, [orders]);
+
+  const fmtDH = (n: number) =>
+    n.toLocaleString("fr-MA", { maximumFractionDigits: 2 }) + " DH";
+
+  const monthLabel = new Date().toLocaleDateString("fr-FR", {
+    month: "long",
+    year: "numeric",
+  });
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Aperçu — {monthLabel}
+        </h2>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-green-700" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground">CA du mois</div>
+              <div className="font-bold text-base truncate">
+                {fmtDH(stats.monthRevenue)}
+              </div>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <ShoppingCart className="h-5 w-5 text-blue-700" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground">
+                Commandes / Panier moyen
+              </div>
+              <div className="font-bold text-base">
+                {stats.monthOrdersCount}{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  · {fmtDH(stats.avgBasket)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Trophy className="h-5 w-5 text-purple-700" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground">Top produit</div>
+              <div className="font-bold text-sm truncate">
+                {stats.topProduct}
+              </div>
+              <div className="text-[10px] text-muted-foreground">
+                {stats.topProductQty > 0
+                  ? `${stats.topProductQty} unité${stats.topProductQty > 1 ? "s" : ""} vendue${stats.topProductQty > 1 ? "s" : ""}`
+                  : "Aucune vente"}
+              </div>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <Users className="h-5 w-5 text-orange-700" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs text-muted-foreground">
+                Clients uniques
+              </div>
+              <div className="font-bold text-base">{stats.uniqueClients}</div>
+              <div className="text-[10px] text-muted-foreground">
+                par téléphone
+              </div>
+            </div>
+          </div>
         </Card>
       </div>
     </div>

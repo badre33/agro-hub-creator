@@ -104,6 +104,10 @@ export const Header = ({ cartCount }: HeaderProps) => {
                     <Package className="h-4 w-4 mr-2" />
                     Mes commandes
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/mon-profil")}>
+                    <User className="h-4 w-4 mr-2" />
+                    Mon profil
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate("/admin")}>
                       <User className="h-4 w-4 mr-2" />

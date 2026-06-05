@@ -81,6 +81,14 @@ const Cart = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  /**
+   * Géolocalise l'utilisateur puis fait du reverse-geocoding via Nominatim
+   * (OpenStreetMap, gratuit, sans clé API) pour récupérer une vraie adresse
+   * lisible et la pré-remplir dans le formulaire.
+   *
+   * Politique d'usage Nominatim : 1 req/s max, doit avoir un User-Agent.
+   * Pour un commerçant à faible volume comme Broccagri, parfaitement adapté.
+   */
   const handleGeolocate = () => {
     if (!navigator.geolocation) {
       toast({
@@ -92,14 +100,57 @@ const Cart = () => {
     }
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLat(pos.coords.latitude);
-        setLng(pos.coords.longitude);
-        setIsLocating(false);
-        toast({
-          title: "Position enregistrée ✓",
-          description: `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)} — l'adresse exacte aidera le livreur.`,
-        });
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setLat(latitude);
+        setLng(longitude);
+
+        // Reverse geocoding via Nominatim — récupère l'adresse lisible
+        try {
+          const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=fr&zoom=18&addressdetails=1`;
+          const res = await fetch(url, {
+            headers: {
+              // Bonne pratique Nominatim : identifier l'app appelante
+              "Accept": "application/json",
+            },
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const a = data.address || {};
+
+          // Construit une rue lisible : "12 Rue Mohamed Diouri"
+          const streetParts = [a.house_number, a.road || a.pedestrian || a.footway]
+            .filter(Boolean);
+          // Quartier en complément : "Médina" / "Maârif" / etc.
+          const neighborhood = a.suburb || a.neighbourhood || a.quarter || a.city_district;
+          const streetLine = [streetParts.join(" "), neighborhood]
+            .filter(Boolean)
+            .join(", ");
+
+          // Ville (Nominatim renvoie parfois "town" ou "village" pour les petites communes)
+          const detectedCity = a.city || a.town || a.village || a.municipality || "";
+
+          // Si on n'a vraiment rien d'utile, fallback sur display_name complet
+          const fallbackAddress = streetLine || data.display_name || "";
+
+          if (fallbackAddress) setAddress(fallbackAddress);
+          if (detectedCity) setCity(detectedCity);
+
+          setIsLocating(false);
+          toast({
+            title: "Adresse trouvée ✓",
+            description: fallbackAddress
+              ? `${fallbackAddress}${detectedCity ? `, ${detectedCity}` : ""}`
+              : "Position enregistrée — vérifie l'adresse ci-dessous.",
+          });
+        } catch (geocodeErr) {
+          // En cas d'échec du reverse geocoding, on garde au moins les coordonnées
+          setIsLocating(false);
+          toast({
+            title: "Position enregistrée",
+            description: `${latitude.toFixed(5)}, ${longitude.toFixed(5)} — tape ton adresse manuellement.`,
+          });
+        }
       },
       (err) => {
         setIsLocating(false);
@@ -487,17 +538,17 @@ const Cart = () => {
                       {isLocating ? (
                         <>
                           <Loader className="h-3 w-3 mr-2 animate-spin" />
-                          Récupération de la position...
+                          Récupération de l'adresse...
                         </>
                       ) : lat && lng ? (
                         <>
                           <Navigation className="h-3 w-3 mr-2 text-primary" />
-                          Position enregistrée ({lat.toFixed(4)}, {lng.toFixed(4)})
+                          Adresse récupérée ✓ — clic pour relancer
                         </>
                       ) : (
                         <>
                           <Navigation className="h-3 w-3 mr-2" />
-                          Partager ma position GPS (optionnel, aide le livreur)
+                          Utiliser ma position pour remplir l'adresse
                         </>
                       )}
                     </Button>

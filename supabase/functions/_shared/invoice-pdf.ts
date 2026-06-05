@@ -24,6 +24,9 @@ export interface InvoiceData {
   customer_name: string;
   customer_phone: string;
   delivery_city: string;
+  delivery_address?: string | null;
+  delivery_date?: string | null; // YYYY-MM-DD
+  delivery_time?: string | null; // ex: "Matin (8h-12h)" ou "14:30"
   notes?: string;
   total_amount: number;
   items: InvoiceItem[];
@@ -182,15 +185,65 @@ function drawCustomerBlock(
   });
   lineY -= lineHeight;
 
-  page.drawText(`Livraison : ${data.delivery_city}`, {
+  // Adresse complète si présente, sinon ville seule
+  const deliveryLine = data.delivery_address
+    ? `Livraison : ${data.delivery_address}, ${data.delivery_city}`
+    : `Livraison : ${data.delivery_city}`;
+  page.drawText(safePdfText(deliveryLine, 90), {
     x: MARGIN,
     y: lineY,
     size: 10,
     font: fontRegular,
     color: TEXT_DARK,
   });
+  lineY -= lineHeight;
+
+  // Créneau de livraison souhaité (date + heure) — encadré jaune pour ressortir
+  const dateFr = formatDateFr(data.delivery_date);
+  if (dateFr || data.delivery_time) {
+    const slotText = [dateFr, data.delivery_time].filter(Boolean).join(" — ");
+    const label = `Créneau souhaité : ${slotText}`;
+    // Petit fond jaune pour attirer l'œil de l'admin
+    page.drawRectangle({
+      x: MARGIN - 4,
+      y: lineY - 4,
+      width: 500,
+      height: 18,
+      color: rgb(0.996, 0.953, 0.78), // ~ #fef3c7
+    });
+    page.drawText(safePdfText(label, 80), {
+      x: MARGIN,
+      y: lineY,
+      size: 10,
+      font: fontBold,
+      color: rgb(0.61, 0.35, 0.07), // ~ #9a5a13 (texte ambre lisible)
+    });
+    lineY -= lineHeight;
+  }
 
   return lineY - 6;
+}
+
+// Helpers : format date FR + supprime les caractères que la police Helvetica
+// (WinAnsi) ne sait pas encoder (emojis, certains caractères arabes).
+function formatDateFr(iso?: string | null): string {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleDateString("fr-FR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function safePdfText(s: string, maxLen = 100): string {
+  // Helvetica/pdf-lib supporte WinAnsi. On vire tout ce qui sort de l'ASCII étendu.
+  const cleaned = s.replace(/[^\x20-\xFF]/g, "");
+  return cleaned.length > maxLen ? cleaned.slice(0, maxLen - 1) + "…" : cleaned;
 }
 
 function drawItemsTable(

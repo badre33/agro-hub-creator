@@ -50,6 +50,8 @@ interface Order {
   customer_phone: string;
   delivery_address: string | null;
   delivery_city: string;
+  delivery_date: string | null;
+  delivery_time: string | null;
   status: OrderStatus;
   total_amount: number;
   notes: string | null;
@@ -102,7 +104,7 @@ const MyOrders = () => {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, customer_name, customer_phone, delivery_address, delivery_city, status, total_amount, notes, created_at, order_items (id, product_name, product_price, quantity, unit, subtotal)"
+        "id, customer_name, customer_phone, delivery_address, delivery_city, delivery_date, delivery_time, status, total_amount, notes, created_at, order_items (id, product_name, product_price, quantity, unit, subtotal)"
       )
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -408,7 +410,7 @@ const MyOrders = () => {
                     )}
 
                     {/* Adresse + contact */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-4 p-3 bg-muted/20 rounded-lg">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-2 p-3 bg-muted/20 rounded-lg">
                       <div className="flex items-center gap-2">
                         <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                         {order.customer_phone}
@@ -421,6 +423,25 @@ const MyOrders = () => {
                         </span>
                       </div>
                     </div>
+
+                    {/* Créneau de livraison souhaité — encart visible si renseigné */}
+                    {(order.delivery_date || order.delivery_time) && (
+                      <div className="flex items-center gap-2 text-sm mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <Clock className="h-3.5 w-3.5 text-amber-700 flex-shrink-0" />
+                        <span className="text-amber-900">
+                          <span className="font-semibold">Livraison souhaitée :</span>{" "}
+                          {order.delivery_date
+                            ? new Date(order.delivery_date).toLocaleDateString("fr-FR", {
+                                weekday: "long",
+                                day: "numeric",
+                                month: "long",
+                              })
+                            : ""}
+                          {order.delivery_date && order.delivery_time ? " — " : ""}
+                          {order.delivery_time ?? ""}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Items */}
                     <div className="space-y-1.5 mb-4">

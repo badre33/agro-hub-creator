@@ -47,6 +47,8 @@ interface OrderEmailRequest {
   total_amount: number;
   items: InvoiceItem[];
   notes?: string;
+  delivery_date?: string; // YYYY-MM-DD (envoyé par Cart.tsx, mais on relit la DB)
+  delivery_time?: string; // ex: "Matin (8h-12h)" ou "14:30"
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -79,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select(
-        "id, customer_name, customer_phone, delivery_city, total_amount, created_at",
+        "id, customer_name, customer_phone, delivery_city, total_amount, created_at, delivery_date, delivery_time, delivery_address",
       )
       .eq("id", orderData.order_id)
       .single();
@@ -129,6 +131,9 @@ const handler = async (req: Request): Promise<Response> => {
         customer_name: order.customer_name,
         customer_phone: order.customer_phone,
         delivery_city: order.delivery_city,
+        delivery_address: order.delivery_address,
+        delivery_date: order.delivery_date,
+        delivery_time: order.delivery_time,
         notes: orderData.notes,
         total_amount: Number(order.total_amount),
         items: verifiedItems,
@@ -168,6 +173,9 @@ const handler = async (req: Request): Promise<Response> => {
             customerName: order.customer_name,
             customerPhone: order.customer_phone,
             deliveryCity: order.delivery_city,
+            deliveryAddress: order.delivery_address,
+            deliveryDate: order.delivery_date,
+            deliveryTime: order.delivery_time,
             notes: orderData.notes,
             totalAmount: Number(order.total_amount),
             itemsHtml,
@@ -262,15 +270,35 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
+function formatDeliveryDateFr(iso?: string | null): string {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("fr-FR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
 function buildAdminEmailHtml(p: {
   orderShortId: string;
   customerName: string;
   customerPhone: string;
   deliveryCity: string;
+  deliveryAddress?: string | null;
+  deliveryDate?: string | null;
+  deliveryTime?: string | null;
   notes?: string;
   totalAmount: number;
   itemsHtml: string;
 }): string {
+  const dateFr = formatDeliveryDateFr(p.deliveryDate);
+  const hasDelivery = dateFr || p.deliveryTime;
   return `
     <!DOCTYPE html>
     <html>
@@ -286,7 +314,13 @@ function buildAdminEmailHtml(p: {
             <h3 style="margin-top:0;color:#374151;">Informations client</h3>
             <p style="margin:5px 0;"><strong>Nom:</strong> ${escapeHtml(p.customerName)}</p>
             <p style="margin:5px 0;"><strong>Téléphone:</strong> ${escapeHtml(p.customerPhone)}</p>
+            ${p.deliveryAddress ? `<p style="margin:5px 0;"><strong>Adresse:</strong> ${escapeHtml(p.deliveryAddress)}</p>` : ""}
             <p style="margin:5px 0;"><strong>Ville de livraison:</strong> ${escapeHtml(p.deliveryCity)}</p>
+            ${
+              hasDelivery
+                ? `<p style="margin:5px 0;background:#fef3c7;padding:8px 10px;border-left:3px solid #f59e0b;border-radius:4px;"><strong>📅 Livraison souhaitée :</strong> ${escapeHtml(dateFr)}${p.deliveryTime ? ` — <strong>${escapeHtml(p.deliveryTime)}</strong>` : ""}</p>`
+                : ""
+            }
             ${p.notes ? `<p style="margin:5px 0;"><strong>Notes:</strong> ${escapeHtml(p.notes)}</p>` : ""}
           </div>
           <div style="background:white;padding:15px;border-radius:8px;">

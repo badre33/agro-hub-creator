@@ -106,6 +106,7 @@ const Admin = () => {
         "Total (DH)",
         "Notes",
         "Date livraison souhaitee",
+        "Creneau horaire",
       ],
       ...orders.map((o) => [
         o.id.slice(0, 8).toUpperCase(),
@@ -119,6 +120,7 @@ const Admin = () => {
         Number(o.total_amount || 0).toFixed(2),
         (o.notes || "").replace(/\n/g, " "),
         (o as any).delivery_date || "",
+        (o as any).delivery_time || "",
       ]),
     ];
     const csv = rows
@@ -432,6 +434,25 @@ const Admin = () => {
                         <TableCell colSpan={7} className="bg-muted/30 p-4">
                           <div className="space-y-2">
                             <h4 className="font-semibold mb-2">Détails de la commande</h4>
+                            {(order as any).delivery_address && (
+                              <p className="text-sm">
+                                <strong>Adresse :</strong> {(order as any).delivery_address}, {order.delivery_city}
+                              </p>
+                            )}
+                            {((order as any).delivery_date || (order as any).delivery_time) && (
+                              <p className="text-sm bg-amber-50 border border-amber-200 p-2 rounded">
+                                <strong>📅 Livraison souhaitée :</strong>{" "}
+                                {(order as any).delivery_date
+                                  ? new Date((order as any).delivery_date).toLocaleDateString("fr-FR", {
+                                      weekday: "long",
+                                      day: "numeric",
+                                      month: "long",
+                                    })
+                                  : ""}
+                                {(order as any).delivery_date && (order as any).delivery_time ? " — " : ""}
+                                <strong>{(order as any).delivery_time ?? ""}</strong>
+                              </p>
+                            )}
                             {order.notes && (
                               <p className="text-sm text-muted-foreground mb-2">
                                 <strong>Notes:</strong> {order.notes}

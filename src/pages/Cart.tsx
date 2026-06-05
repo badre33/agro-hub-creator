@@ -36,6 +36,7 @@ const Cart = () => {
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryTime, setDeliveryTime] = useState(""); // créneau souhaité (ex: "Matin (8h-12h)" ou "14:30")
   const [isLocating, setIsLocating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState<SupabaseUser | null>(null);
@@ -195,10 +196,18 @@ const Cart = () => {
 
     setIsSubmitting(true);
 
-    try {
-      const orderId = crypto.randomUUID();
+    const orderId = crypto.randomUUID();
+    const orderItems = cartItems.map((item) => ({
+      order_id: orderId,
+      product_name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      product_price: item.price,
+      subtotal: item.total,
+    }));
 
-      // 1. Create the order — lie au user_id si connecté (pour /mes-commandes)
+    try {
+      // 1. CRITIQUE : insère la commande
       const { error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -213,28 +222,53 @@ const Cart = () => {
           total_amount: total,
           notes: notes.trim() || null,
           delivery_date: deliveryDate || null,
+          delivery_time: deliveryTime || null,
           user_id: currentUser?.id ?? null,
         });
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error("Order insert error:", orderError);
+        toast({
+          title: "Impossible d'enregistrer la commande",
+          description: orderError.message || "Vérifie ta connexion et réessaie.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
-      // 2. Create order items
-      const orderItems = cartItems.map((item) => ({
-        order_id: orderId,
-        product_name: item.name,
-        quantity: item.quantity,
-        unit: item.unit,
-        product_price: item.price,
-        subtotal: item.total,
-      }));
-
+      // 2. CRITIQUE : insère les lignes de la commande
       const { error: itemsError } = await supabase
         .from("order_items")
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error("Order items insert error:", itemsError);
+        toast({
+          title: "Commande partiellement enregistrée",
+          description:
+            "Les produits n'ont pas pu être attachés. Notre équipe va te recontacter pour confirmer.",
+          variant: "destructive",
+        });
+        // On continue quand même — l'admin pourra rattraper via la base
+      }
+    } catch (criticalError: unknown) {
+      console.error("Critical order error:", criticalError);
+      const msg = criticalError instanceof Error ? criticalError.message : String(criticalError);
+      toast({
+        title: "Erreur",
+        description: msg || "Une erreur s'est produite. Réessaie dans un instant.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
-      // 3. Send email notification (admin + client si email fourni)
+    // À partir d'ici, la commande EST enregistrée. Les étapes suivantes sont
+    // best-effort : si elles échouent, on ne montre pas d'erreur au client.
+
+    // 3. Email + WhatsApp (Edge Function) — best-effort
+    try {
       const { error: emailError } = await supabase.functions.invoke(
         "send-order-email",
         {
@@ -250,24 +284,24 @@ const Cart = () => {
             total_amount: total,
             items: orderItems,
             notes: notes.trim() || undefined,
+            delivery_date: deliveryDate || undefined,
+            delivery_time: deliveryTime || undefined,
           },
         }
       );
+      if (emailError) console.warn("Email/WhatsApp non bloquant:", emailError);
+    } catch (notifErr) {
+      console.warn("Notification non bloquante échouée:", notifErr);
+    }
 
-      if (emailError) {
-        console.error("Email error:", emailError);
-        // Continue even if email fails
-      }
-
-      // 4. Si le client est connecté, on enrichit son profil avec ce qu'il vient de remplir
-      //    (utile pour les comptes créés en SSO sans nom/tel, ou pour 1ère commande).
-      if (currentUser) {
+    // 4. Auto-save profil — best-effort
+    if (currentUser) {
+      try {
         const md = currentUser.user_metadata || {};
         const updates: Record<string, unknown> = {};
         if (!md.full_name && customerName.trim()) updates.full_name = customerName.trim();
         if (!md.phone && customerPhone.trim()) updates.phone = customerPhone.trim();
         const existingAddrs = Array.isArray(md.addresses) ? md.addresses : [];
-        // Si carnet d'adresses vide, on ajoute celle utilisée comme première adresse "Principale"
         if (existingAddrs.length === 0 && address.trim() && city.trim()) {
           updates.addresses = [
             {
@@ -279,35 +313,29 @@ const Cart = () => {
           ];
         }
         if (Object.keys(updates).length > 0) {
-          await supabase.auth.updateUser({ data: { ...md, ...updates } }).catch((err) => {
-            console.warn("Auto-save profil échoué (non bloquant):", err);
-          });
+          await supabase.auth.updateUser({ data: { ...md, ...updates } });
         }
+      } catch (profileErr) {
+        console.warn("Auto-save profil échoué (non bloquant):", profileErr);
       }
-
-      // 5. Clear cart and show success
-      clearCart();
-      setCity("");
-      setCustomerName("");
-      setCustomerPhone("");
-      setNotes("");
-
-      toast({
-        title: "Commande envoyée ✅",
-        description: currentUser
-          ? `Votre commande #${orderId.slice(0, 8)} est enregistrée. Retrouvez-la dans "Mes commandes".`
-          : `Votre commande #${orderId.slice(0, 8)} est enregistrée. Nous vous contacterons bientôt. Astuce : créez un compte pour suivre vos commandes.`,
-      });
-    } catch (error: any) {
-      console.error("Order error:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite. Veuillez réessayer.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
     }
+
+    // 5. Reset UI + toast succès
+    clearCart();
+    setCity("");
+    setCustomerName("");
+    setCustomerPhone("");
+    setNotes("");
+    setDeliveryDate("");
+    setDeliveryTime("");
+
+    toast({
+      title: "Commande envoyée ✅",
+      description: currentUser
+        ? `Votre commande #${orderId.slice(0, 8)} est enregistrée. Retrouvez-la dans "Mes commandes".`
+        : `Votre commande #${orderId.slice(0, 8)} est enregistrée. Nous vous contacterons bientôt. Astuce : créez un compte pour suivre vos commandes.`,
+    });
+    setIsSubmitting(false);
   };
 
   const handleIncrement = (productId: number, currentQuantity: number) => {
@@ -584,6 +612,55 @@ const Cart = () => {
                       onChange={(e) => setDeliveryDate(e.target.value)}
                       className="rounded-lg border-2 focus:border-primary transition-colors text-sm sm:text-base h-10 sm:h-11"
                     />
+                  </div>
+
+                  {/* Créneau horaire : chips rapides + option custom */}
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-sm sm:text-base">
+                      Créneau horaire <span className="text-muted-foreground font-normal">(optionnel)</span>
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: "Matin (8h-12h)", label: "Matin", sub: "8h–12h" },
+                        { value: "Midi (12h-14h)", label: "Midi", sub: "12h–14h" },
+                        { value: "Après-midi (14h-17h)", label: "Après-midi", sub: "14h–17h" },
+                        { value: "Soir (17h-20h)", label: "Soir", sub: "17h–20h" },
+                      ].map((slot) => {
+                        const active = deliveryTime === slot.value;
+                        return (
+                          <button
+                            key={slot.value}
+                            type="button"
+                            onClick={() =>
+                              setDeliveryTime(active ? "" : slot.value)
+                            }
+                            className={`flex-1 min-w-[80px] px-3 py-2 rounded-lg border-2 transition-all text-center ${
+                              active
+                                ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                : "bg-card border-border hover:border-primary/40"
+                            }`}
+                          >
+                            <div className="font-semibold text-sm">{slot.label}</div>
+                            <div className={`text-xs ${active ? "opacity-90" : "text-muted-foreground"}`}>
+                              {slot.sub}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Heure précise si besoin */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-xs text-muted-foreground">ou heure précise :</span>
+                      <Input
+                        type="time"
+                        value={
+                          // Affiche le champ time uniquement s'il contient un format HH:MM
+                          /^\d{2}:\d{2}$/.test(deliveryTime) ? deliveryTime : ""
+                        }
+                        onChange={(e) => setDeliveryTime(e.target.value)}
+                        className="h-9 w-32 rounded-lg border-2 focus:border-primary text-sm"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">

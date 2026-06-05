@@ -2,7 +2,11 @@
 # Avec base absolue https://broccagrishop.netlify.app/ dans vite.config.ts,
 # les assets sont chargés directement depuis ce domaine, peu importe l'URL
 # dans la barre du navigateur (qui sera broccagri.ma/boutique via proxy).
-# Du coup la config Netlify reste minimale : juste un SPA fallback.
+#
+# React Router a basename "/boutique" en prod pour matcher l'URL via proxy.
+# Conséquence : si quelqu'un visite broccagrishop.netlify.app DIRECTEMENT
+# (sans /boutique), aucune route ne match → page vide. On redirige donc
+# tout ce qui n'est pas déjà sous /boutique/ ou /assets/ vers /boutique/.
 
 [build]
   publish = "dist"
@@ -27,7 +31,24 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Access-Control-Allow-Origin = "*"
 
-# SPA fallback (React Router avec basename /boutique côté code)
+# === REDIRECTS ===
+# Ordre important : Netlify applique les redirects dans l'ordre du fichier.
+
+# 1. Racine "/" → /boutique/ (pour les liens qui pointent vers la racine)
+[[redirects]]
+  from = "/"
+  to = "/boutique/"
+  status = 302
+  force = true
+
+# 2. SPA fallback pour /boutique/* (React Router gère le sous-routing)
+[[redirects]]
+  from = "/boutique/*"
+  to = "/index.html"
+  status = 200
+
+# 3. SPA fallback générique (catch-all pour assets et autres ressources)
+#    Garde le comportement existant pour ne pas casser le précache du service worker.
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -15,20 +15,14 @@ import TermsPage from "./pages/TermsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import NotFound from "./pages/NotFound";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
-import { InstallPwaPrompt } from "@/components/InstallPwaPrompt";
 
-// Affiche le bouton WhatsApp + bannière d'install PWA sur les pages publiques
-// mais pas sur admin/login (pour éviter le clutter en mode pro).
+// Affiche le bouton WhatsApp sur les pages publiques mais pas sur admin/login
+// (pour éviter le clutter en mode pro).
 const FloatingChat = () => {
   const { pathname } = useLocation();
   const hideOn = ["/admin", "/login"];
   if (hideOn.some((p) => pathname.startsWith(p))) return null;
-  return (
-    <>
-      <WhatsAppFab />
-      <InstallPwaPrompt />
-    </>
-  );
+  return <WhatsAppFab />;
 };
 
 const queryClient = new QueryClient();

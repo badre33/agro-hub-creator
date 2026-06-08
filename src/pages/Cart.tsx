@@ -268,8 +268,10 @@ const Cart = () => {
     // best-effort : si elles échouent, on ne montre pas d'erreur au client.
 
     // 3. Email + WhatsApp (Edge Function) — best-effort
+    // On capture aussi la réponse pour debug (admin_email_sent / whatsapp_sent)
+    let notifStatus: { admin_email_sent?: boolean; whatsapp_sent?: boolean; error?: string } = {};
     try {
-      const { error: emailError } = await supabase.functions.invoke(
+      const { data: notifData, error: emailError } = await supabase.functions.invoke(
         "send-order-email",
         {
           body: {
@@ -289,9 +291,19 @@ const Cart = () => {
           },
         }
       );
-      if (emailError) console.warn("Email/WhatsApp non bloquant:", emailError);
+      if (emailError) {
+        console.warn("Email/WhatsApp non bloquant:", emailError);
+        notifStatus.error = emailError.message ?? String(emailError);
+      } else if (notifData) {
+        notifStatus = {
+          admin_email_sent: !!notifData.admin_email_sent,
+          whatsapp_sent: !!notifData.whatsapp_sent,
+        };
+        console.log("[notif] résultat send-order-email:", notifStatus);
+      }
     } catch (notifErr) {
       console.warn("Notification non bloquante échouée:", notifErr);
+      notifStatus.error = notifErr instanceof Error ? notifErr.message : String(notifErr);
     }
 
     // 4. Auto-save profil — best-effort
@@ -329,11 +341,26 @@ const Cart = () => {
     setDeliveryDate("");
     setDeliveryTime("");
 
+    // Construit un message qui dit clairement ce qui est parti et ce qui a foiré
+    // côté notifications (utile pour debug Resend / WhatsApp côté admin).
+    const notifBits: string[] = [];
+    if (notifStatus.admin_email_sent === true) notifBits.push("📧 Email admin envoyé");
+    if (notifStatus.admin_email_sent === false) notifBits.push("📧 Email admin non envoyé (vérifier secrets)");
+    if (notifStatus.whatsapp_sent === true) notifBits.push("💬 WhatsApp envoyé");
+    if (notifStatus.whatsapp_sent === false) notifBits.push("💬 WhatsApp non envoyé (template Meta en attente ?)");
+    if (notifStatus.error) notifBits.push(`⚠️ ${notifStatus.error}`);
+
     toast({
       title: "Commande envoyée ✅",
-      description: currentUser
-        ? `Votre commande #${orderId.slice(0, 8)} est enregistrée. Retrouvez-la dans "Mes commandes".`
-        : `Votre commande #${orderId.slice(0, 8)} est enregistrée. Nous vous contacterons bientôt. Astuce : créez un compte pour suivre vos commandes.`,
+      description: [
+        currentUser
+          ? `Commande #${orderId.slice(0, 8)} enregistrée. Voir dans "Mes commandes".`
+          : `Commande #${orderId.slice(0, 8)} enregistrée. Nous te contacterons bientôt.`,
+        notifBits.join(" · "),
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      duration: 8000,
     });
     setIsSubmitting(false);
   };
@@ -380,19 +407,113 @@ const Cart = () => {
 
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         {cartItems.length === 0 ? (
-          <div className="text-center py-12 sm:py-16 animate-fade-in">
-            <div className="inline-flex p-4 sm:p-6 bg-muted/50 rounded-full mb-4 sm:mb-6">
-              <ShoppingCart className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-muted-foreground" />
+          <div className="max-w-md mx-auto py-8 sm:py-12 animate-fade-in space-y-8">
+            {/* Bloc panier vide */}
+            <div className="text-center">
+              <div className="inline-flex p-4 sm:p-6 bg-muted/50 rounded-full mb-4 sm:mb-6">
+                <ShoppingCart className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-semibold mb-2">Votre panier est vide</h2>
+              <p className="text-sm sm:text-base text-muted-foreground mb-6 px-4">
+                Ajoutez des produits pour commencer votre commande
+              </p>
+              <Link to="/">
+                <Button size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-shadow text-sm sm:text-base">
+                  Découvrir nos produits
+                </Button>
+              </Link>
             </div>
-            <h2 className="text-xl sm:text-2xl font-semibold mb-2">Votre panier est vide</h2>
-            <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 px-4">
-              Ajoutez des produits pour commencer votre commande
-            </p>
-            <Link to="/">
-              <Button size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-shadow text-sm sm:text-base">
-                Découvrir nos produits
-              </Button>
-            </Link>
+
+            {/* Bloc signup uniquement si pas connecté */}
+            {!currentUser && (
+              <Card className="p-5 sm:p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20">
+                <div className="text-center mb-5">
+                  <div className="inline-flex p-3 bg-primary/10 rounded-full mb-3">
+                    <User className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-1">Créez votre compte</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Suivez vos commandes, sauvegardez vos adresses, recommandez en 1 clic
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-center gap-2 h-11 bg-white hover:bg-gray-50 border-2"
+                    onClick={async () => {
+                      const { error } = await supabase.auth.signInWithOAuth({
+                        provider: "google",
+                        options: { redirectTo: `${window.location.origin}/boutique/mes-commandes` },
+                      });
+                      if (error) {
+                        toast({
+                          title: "Google login indisponible",
+                          description:
+                            "Provider non activé côté Supabase. Utilise email + mot de passe en attendant.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    {/* Logo G de Google en SVG inline (pas de lib en plus) */}
+                    <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden>
+                      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4C12.9 4 4 12.9 4 24s8.9 20 20 20s20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+                      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8c1.8-4.4 6-7.5 10.9-7.5c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4C16.3 4 9.7 8.3 6.3 14.7z"/>
+                      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.6 2.4-7.2 2.4c-5.1 0-9.5-3.3-11.1-7.9l-6.5 5C9.6 39.7 16.2 44 24 44z"/>
+                      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.2 5.2C40.9 35.8 44 30.4 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+                    </svg>
+                    <span className="text-sm font-medium">Continuer avec Google</span>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full justify-center gap-2 h-11 bg-white hover:bg-gray-50 border-2"
+                    onClick={async () => {
+                      const { error } = await supabase.auth.signInWithOAuth({
+                        provider: "facebook",
+                        options: { redirectTo: `${window.location.origin}/boutique/mes-commandes` },
+                      });
+                      if (error) {
+                        toast({
+                          title: "Facebook login indisponible",
+                          description:
+                            "Provider non activé côté Supabase. Utilise email + mot de passe en attendant.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
+                      <path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.017 1.791-4.683 4.533-4.683c1.312 0 2.686.235 2.686.235v2.97h-1.514c-1.49 0-1.955.928-1.955 1.88v2.258h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+                    </svg>
+                    <span className="text-sm font-medium">Continuer avec Facebook</span>
+                  </Button>
+
+                  <div className="relative my-3">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-muted-foreground/20"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">ou</span>
+                    </div>
+                  </div>
+
+                  <Link to="/login">
+                    <Button className="w-full h-11 font-medium" size="lg">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Email + mot de passe
+                    </Button>
+                  </Link>
+                </div>
+                <p className="text-[11px] text-center text-muted-foreground mt-4">
+                  En créant un compte, tu acceptes nos{" "}
+                  <Link to="/cgv" className="underline hover:text-foreground">
+                    CGV
+                  </Link>
+                  . Aucun spam, promis.
+                </p>
+              </Card>
+            )}
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
